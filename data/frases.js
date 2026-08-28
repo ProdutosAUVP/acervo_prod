@@ -12,29 +12,25 @@
 
    Dica: copie um bloco inteiro, cole no topo da lista e edite.
    Não esqueça da vírgula entre os blocos.
-
-   ⚠️ Os dois blocos abaixo são MODELOS, não frases reais — ninguém disse
-   isso. Estão aqui só para o time ver o formato preenchido. Apague os dois
-   assim que registrar as primeiras pérolas de verdade.
    ========================================================================= */
 
 window.ACERVO = window.ACERVO || {};
 
 window.ACERVO.frases = [
   {
-    texto: 'EXEMPLO — troque por uma frase que alguém realmente disse.',
+    texto: 'eu nem sou alfabetizado',
     autor: 'daniel',
-    contexto: 'O contexto é metade da piada: conte o que estava acontecendo na hora.',
-    data: '2026-08-28',
-    tags: ['exemplo'],
-    nota: 3
+    contexto: '',
+    data: '2026-07-16',
+    tags: [],
+    nota: 0
   },
   {
-    texto: 'EXEMPLO — o campo "nota" são as pimentas de absurdo, de 1 a 5.',
-    autor: 'ariadne',
-    contexto: 'Este bloco existe só para mostrar o formato. Pode apagar.',
-    data: '2026-08-27',
-    tags: ['exemplo'],
-    nota: 5
+    texto: 'eu sou a sua figura paterna',
+    autor: 'daniel',
+    contexto: '',
+    data: '2026-06-11',
+    tags: [],
+    nota: 0
   }
 ];

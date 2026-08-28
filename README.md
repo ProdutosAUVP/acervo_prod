@@ -3,9 +3,9 @@
 O museu oficial das pérolas, fotos e momentos cômicos do time de produtos.
 Tudo que é dito, feito e fotografado por aqui fica guardado — para sempre.
 
-> **Estado atual:** esqueleto pronto e time cadastrado. Falta o conteúdo:
-> os blocos em `data/frases.js`, `momentos.js`, `galeria.js` e `premios.js`
-> são modelos marcados com `EXEMPLO` — ninguém disse nem fez nada daquilo.
+> **Estado atual:** site no ar, time cadastrado e as primeiras frases
+> registradas. Os blocos em `data/momentos.js`, `galeria.js` e `premios.js`
+> ainda são modelos marcados com `EXEMPLO` — ninguém fez nada daquilo.
 > Apague-os conforme registrar o material de verdade.
 
 ---
