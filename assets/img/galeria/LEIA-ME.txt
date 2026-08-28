@@ -1,0 +1,2 @@
+# Coloque aqui as fotos e prints da galeria.
+# Depois cadastre o caminho do arquivo em data/galeria.js
