@@ -12,34 +12,29 @@
 
    Dica: copie um bloco inteiro, cole no topo da lista e edite.
    Não esqueça da vírgula entre os blocos.
+
+   ⚠️ Os dois blocos abaixo são MODELOS, não frases reais — ninguém disse
+   isso. Estão aqui só para o time ver o formato preenchido. Apague os dois
+   assim que registrar as primeiras pérolas de verdade.
    ========================================================================= */
 
 window.ACERVO = window.ACERVO || {};
 
 window.ACERVO.frases = [
-  // ⬇️ EXEMPLOS — apague quando começar a preencher de verdade ⬇️
   {
-    texto: 'Se ninguém reclamar em produção, é porque funcionou.',
-    autor: 'exemplo-3',
-    contexto: 'Estratégia oficial de QA apresentada numa sexta-feira, 17h50.',
-    data: '2025-11-14',
-    tags: ['deploy', 'sexta-feira'],
-    nota: 5
+    texto: 'EXEMPLO — troque por uma frase que alguém realmente disse.',
+    autor: 'daniel',
+    contexto: 'O contexto é metade da piada: conte o que estava acontecendo na hora.',
+    data: '2026-08-28',
+    tags: ['exemplo'],
+    nota: 3
   },
   {
-    texto: 'Isso aqui é MVP, depois a gente arruma.',
-    autor: 'exemplo-1',
-    contexto: 'Dito pela 47ª vez sobre a mesma tela, que está no ar há 2 anos.',
-    data: '2025-10-02',
-    tags: ['mvp', 'clássico'],
-    nota: 4
-  },
-  {
-    texto: 'Eu não vou brigar por causa disso... mas tá errado.',
-    autor: 'exemplo-2',
-    contexto: 'Sobre um botão 3px fora do grid. A briga durou 40 minutos.',
-    data: '2025-09-19',
-    tags: ['design', 'pixel'],
+    texto: 'EXEMPLO — o campo "nota" são as pimentas de absurdo, de 1 a 5.',
+    autor: 'ariadne',
+    contexto: 'Este bloco existe só para mostrar o formato. Pode apagar.',
+    data: '2026-08-27',
+    tags: ['exemplo'],
     nota: 5
   }
 ];

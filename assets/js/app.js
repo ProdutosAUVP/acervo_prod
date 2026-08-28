@@ -17,30 +17,69 @@
     galeria: { busca: '' }
   };
 
-  /* ---------------- Tema ---------------- */
-  var CHAVE_TEMA = 'acervo:tema';
+  /* ---------------- Tema ----------------
+     Três estados: Sistema (padrão), Claro e Escuro.
 
-  function aplicarTema(tema) {
-    document.documentElement.setAttribute('data-tema', tema);
+     O contrato de armazenamento é o mesmo da central do time
+     ('auvp-theme' com 'light' | 'dark'; sem chave = seguir o sistema).
+     Como os dois sites vivem no mesmo domínio, quem escolher um tema em
+     um deles encontra o mesmo tema no outro.
+
+     A classe .dark no <html> é a do Design System. O tema também é
+     aplicado no <head>, antes da primeira pintura, para não piscar. */
+  var CHAVE_TEMA = 'auvp-theme';
+  var consultaEscuro = window.matchMedia('(prefers-color-scheme: dark)');
+
+  function temaEscolhido() {
+    try {
+      var salvo = localStorage.getItem(CHAVE_TEMA);
+      return (salvo === 'light' || salvo === 'dark') ? salvo : 'sistema';
+    } catch (e) {
+      return 'sistema';
+    }
+  }
+
+  function aplicarTema() {
+    var escolha = temaEscolhido();
+    var escuro = escolha === 'dark' || (escolha === 'sistema' && consultaEscuro.matches);
+
+    document.documentElement.classList.toggle('dark', escuro);
+
     var icone = document.getElementById('tema-icone');
     var label = document.getElementById('tema-label');
-    if (icone) icone.textContent = tema === 'caos' ? '🔥' : '👔';
-    if (label) label.textContent = tema === 'caos' ? 'modo caos' : 'modo sério';
-    try { localStorage.setItem(CHAVE_TEMA, tema); } catch (e) { /* modo anônimo */ }
+    var botao = document.getElementById('tema-botao');
+    var rotulos = { sistema: ['🖥️', 'Sistema'], light: ['☀️', 'Claro'], dark: ['🌙', 'Escuro'] };
+
+    if (icone) icone.textContent = rotulos[escolha][0];
+    if (label) label.textContent = rotulos[escolha][1];
+    if (botao) {
+      botao.setAttribute('title',
+        'Tema: ' + rotulos[escolha][1] +
+        (escolha === 'sistema' ? ' (seguindo o seu computador)' : '') +
+        ' — clique para alternar');
+    }
   }
 
   function iniciarTema() {
-    var salvo = 'caos';
-    try { salvo = localStorage.getItem(CHAVE_TEMA) || 'caos'; } catch (e) { /* ignora */ }
-    aplicarTema(salvo);
+    aplicarTema();
 
     var botao = document.getElementById('tema-botao');
     if (botao) {
       botao.addEventListener('click', function () {
-        var atual = document.documentElement.getAttribute('data-tema');
-        aplicarTema(atual === 'caos' ? 'serio' : 'caos');
+        // Sistema → Claro → Escuro → Sistema
+        var proximo = { sistema: 'light', light: 'dark', dark: 'sistema' }[temaEscolhido()];
+        try {
+          if (proximo === 'sistema') localStorage.removeItem(CHAVE_TEMA);
+          else localStorage.setItem(CHAVE_TEMA, proximo);
+        } catch (e) { /* modo anônimo: vale só para esta sessão */ }
+        aplicarTema();
       });
     }
+
+    // Se o computador trocar de tema com o site aberto, acompanha na hora
+    var aoMudar = function () { if (temaEscolhido() === 'sistema') aplicarTema(); };
+    if (consultaEscuro.addEventListener) consultaEscuro.addEventListener('change', aoMudar);
+    else if (consultaEscuro.addListener) consultaEscuro.addListener(aoMudar);
   }
 
   /* ---------------- Cabeçalho ---------------- */
@@ -187,39 +226,35 @@
       });
     });
 
-    // Botão "me surpreenda"
+    // Botões "me surpreenda" e "quero outra": ambos trocam a frase em
+    // destaque na home, sem recarregar a página.
+    function trocarFraseDoDia(rolar) {
+      var f = u.aleatorio(window.ACERVO.frases || []);
+      var caixa = document.getElementById('frase-dia');
+      if (!f || !caixa) return false;
+
+      var p = u.pessoa(f.autor);
+      caixa.className = 'frase-dia ' + u.acento(p);   // o destaque segue quem falou
+      caixa.innerHTML = '<blockquote>“' + u.esc(f.texto) + '”</blockquote>' +
+        '<footer>' + u.avatar(p) + '<strong>' + u.esc(p.nome) + '</strong>' +
+        '<span>· ' + u.esc(u.dataLegivel(f.data)) + '</span></footer>';
+      u.tratarImagens(caixa);
+      if (rolar) caixa.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return true;
+    }
+
     var sortear = document.querySelector('[data-acao="sortear"]');
     if (sortear) {
       sortear.addEventListener('click', function () {
         u.confete();
-        var todas = window.ACERVO.frases || [];
-        var f = u.aleatorio(todas);
-        if (!f) { irPara('/frases'); return; }
-        var caixa = document.getElementById('frase-dia');
-        if (caixa) {
-          var p = u.pessoa(f.autor);
-          caixa.innerHTML = '<blockquote>“' + u.esc(f.texto) + '”</blockquote>' +
-            '<footer>' + u.avatar(p) + '<strong>' + u.esc(p.nome) + '</strong>' +
-            '<span>· ' + u.esc(u.dataLegivel(f.data)) + '</span></footer>';
-          u.tratarImagens(caixa);
-          caixa.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
+        // Sem frase cadastrada não há o que sortear: manda para a seção.
+        if (!trocarFraseDoDia(true)) irPara('/frases');
       });
     }
 
-    // Botão "quero outra" da frase do dia
     var outra = document.querySelector('[data-acao="outra-frase"]');
     if (outra) {
-      outra.addEventListener('click', function () {
-        var f = u.aleatorio(window.ACERVO.frases || []);
-        var caixa = document.getElementById('frase-dia');
-        if (!f || !caixa) return;
-        var p = u.pessoa(f.autor);
-        caixa.innerHTML = '<blockquote>“' + u.esc(f.texto) + '”</blockquote>' +
-          '<footer>' + u.avatar(p) + '<strong>' + u.esc(p.nome) + '</strong>' +
-          '<span>· ' + u.esc(u.dataLegivel(f.data)) + '</span></footer>';
-        u.tratarImagens(caixa);
-      });
+      outra.addEventListener('click', function () { trocarFraseDoDia(false); });
     }
   }
 

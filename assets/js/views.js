@@ -27,7 +27,7 @@ window.ACERVO.views = (function () {
   function cardFrase(f) {
     var p = u.pessoa(f.autor);
     return '' +
-      '<article class="frase cor-' + u.esc(p.cor || 'roxo') + '">' +
+      '<article class="frase ' + u.acento(p) + '">' +
         '<p class="frase__texto">' + u.esc(f.texto) + '</p>' +
         (f.contexto ? '<p class="frase__contexto">' + u.esc(f.contexto) + '</p>' : '') +
         '<div class="frase__rodape">' +
@@ -82,7 +82,7 @@ window.ACERVO.views = (function () {
   function cardPremio(pr) {
     var p = u.pessoa(pr.ganhador);
     return '' +
-      '<article class="premio cor-' + u.esc(p.cor || 'roxo') + '">' +
+      '<article class="premio ' + u.acento(p) + '">' +
         '<div class="premio__emoji">' + u.esc(pr.emoji || '🏆') + '</div>' +
         '<h3 class="premio__titulo">' + u.esc(pr.titulo) + '</h3>' +
         '<p class="premio__descricao">' + u.esc(pr.descricao || '') + '</p>' +
@@ -103,7 +103,7 @@ window.ACERVO.views = (function () {
     }).length;
 
     return '' +
-      '<a class="pessoa cor-' + u.esc(p.cor || 'roxo') + '" href="#/time/' + u.esc(p.id) + '">' +
+      '<a class="pessoa ' + u.acento(p) + '" href="#/time/' + u.esc(p.id) + '">' +
         '<div class="pessoa__topo">' + u.avatar(p) +
           '<div><div class="pessoa__nome">' + u.esc(p.nome) + '</div>' +
           '<div class="pessoa__cargo">' + u.esc(p.cargo || '') + '</div></div>' +
@@ -156,7 +156,7 @@ window.ACERVO.views = (function () {
         '<section class="secao">' +
           '<div class="secao__topo"><h2>A frase do dia</h2>' +
             '<button class="chip" data-acao="outra-frase">quero outra</button></div>' +
-          '<div class="frase-dia" id="frase-dia">' +
+          '<div class="frase-dia ' + u.acento(pd) + '" id="frase-dia">' +
             '<blockquote>“' + u.esc(destaque.texto) + '”</blockquote>' +
             '<footer>' + u.avatar(pd) + '<strong>' + u.esc(pd.nome) + '</strong>' +
             '<span>· ' + u.esc(u.dataLegivel(destaque.data)) + '</span></footer>' +
@@ -199,8 +199,12 @@ window.ACERVO.views = (function () {
 
     var chips = '<button class="chip" data-filtro-autor="" aria-pressed="' + (!autor) + '">todo mundo</button>' +
       d.time.map(function (p) {
+        var icone = p.foto
+          ? '<img class="chip__foto" src="' + u.esc(p.foto) + '" alt="" loading="lazy" ' +
+            'data-fallback="' + u.esc(p.emoji || '👤') + '">'
+          : u.esc(p.emoji || '👤');
         return '<button class="chip" data-filtro-autor="' + u.esc(p.id) + '" aria-pressed="' +
-               (autor === p.id) + '">' + u.esc(p.emoji || '👤') + ' ' + u.esc(p.nome.split(' ')[0]) + '</button>';
+               (autor === p.id) + '">' + icone + ' ' + u.esc(p.nome.split(' ')[0]) + '</button>';
       }).join('');
 
     return '' +
@@ -214,7 +218,7 @@ window.ACERVO.views = (function () {
         'value="' + u.esc(estado.busca || '') + '">' +
         chips +
       '</div>' +
-      '<p class="frase__data">' + u.plural(filtradas.length, 'frase encontrada', 'frases encontradas') + '</p>' +
+      '<p class="contagem">' + u.plural(filtradas.length, 'frase encontrada', 'frases encontradas') + '</p>' +
       (filtradas.length
         ? '<div class="grade-frases">' + filtradas.map(cardFrase).join('') + '</div>'
         : u.vazio('Nenhuma frase com esse filtro.', 'Ou ninguém falou besteira sobre isso ainda, o que é improvável.'));
@@ -316,7 +320,7 @@ window.ACERVO.views = (function () {
 
     var html = '' +
       '<a class="voltar" href="#/time">← voltar para o time</a>' +
-      '<section class="perfil cor-' + u.esc(p.cor || 'roxo') + '">' +
+      '<section class="perfil ' + u.acento(p) + '">' +
         u.avatar(p, true) +
         '<div class="perfil__info">' +
           '<h1>' + u.esc(p.nome) + '</h1>' +
@@ -398,7 +402,12 @@ window.ACERVO.views = (function () {
         '<p>Abra o <code>index.html</code> direto no navegador. Não precisa instalar nada, ' +
         'não tem build, não tem servidor.</p>' +
 
-        '<h3>5. Publique</h3>' +
+        '<h3>5. Sobre o visual</h3>' +
+        '<p>As cores, fontes e cantos vêm do Design System do time. Cada pessoa ganha ' +
+        'automaticamente uma cor da paleta pela posição em <code>data/time.js</code> — ' +
+        'não precisa escolher cor na mão.</p>' +
+
+        '<h3>6. Publique</h3>' +
         '<p>Commit e push na branch principal. O site atualiza sozinho pelo GitHub Pages.</p>' +
 
         '<h3>Regras não escritas do acervo</h3>' +
