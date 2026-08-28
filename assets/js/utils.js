@@ -46,15 +46,27 @@ window.ACERVO.utils = (function () {
       if (time[i].id === id) return time[i];
     }
     // Pessoa citada em algum conteúdo mas que não está em data/time.js
-    return { id: id, nome: id || 'Anônimo', cargo: '', bio: '', cor: 'roxo', emoji: '👤', foto: '' };
+    return { id: id, nome: id || 'Anônimo', cargo: '', bio: '', emoji: '👤', foto: '' };
+  }
+
+  // Cor de cada pessoa: sai da paleta categórica do Design System pela
+  // posição em data/time.js, então ninguém precisa escolher cor na mão.
+  // Para fixar uma, basta pôr `acento: 1..8` no cadastro da pessoa.
+  function acento(p) {
+    if (p && p.acento) return 'acento-' + (((parseInt(p.acento, 10) - 1) % 8) + 1);
+    var time = window.ACERVO.time || [];
+    for (var i = 0; i < time.length; i++) {
+      if (p && time[i].id === p.id) return 'acento-' + ((i % 8) + 1);
+    }
+    return 'acento-8';
   }
 
   function avatar(p, grande) {
-    var classe = 'avatar' + (grande ? ' avatar--grande' : '');
+    var classe = 'avatar ' + acento(p) + (grande ? ' avatar--grande' : '');
     if (p.foto) {
       return '<span class="' + classe + '">' +
              '<img src="' + esc(p.foto) + '" alt="Foto de ' + esc(p.nome) + '" ' +
-             'data-fallback="' + esc(p.emoji || '👤') + '">' +
+             'loading="lazy" data-fallback="' + esc(p.emoji || '👤') + '">' +
              '</span>';
     }
     return '<span class="' + classe + '" aria-hidden="true">' + esc(p.emoji || '👤') + '</span>';
@@ -62,7 +74,7 @@ window.ACERVO.utils = (function () {
 
   function linkPessoa(id) {
     var p = pessoa(id);
-    return '<a class="selo cor-' + esc(p.cor || 'roxo') + '" href="#/time/' + esc(p.id) + '">' +
+    return '<a class="selo selo--acento ' + acento(p) + '" href="#/time/' + esc(p.id) + '">' +
            esc(p.emoji || '👤') + ' ' + esc(p.nome) + '</a>';
   }
 
@@ -123,7 +135,10 @@ window.ACERVO.utils = (function () {
     }
   }
 
-  /* --- Troca imagens quebradas por um placeholder simpático --- */
+  /* --- Troca imagens quebradas por um placeholder simpático ---
+     Numa foto da galeria vale explicar qual arquivo falta; num avatar ou
+     num chip, o card de aviso destruiria o componente — ali entra só o
+     emoji de reserva no lugar da imagem. */
   function tratarImagens(raiz) {
     var imgs = (raiz || document).querySelectorAll('img[data-fallback]');
     Array.prototype.forEach.call(imgs, function (img) {
@@ -131,11 +146,16 @@ window.ACERVO.utils = (function () {
         var pai = img.parentNode;
         if (!pai) return;
         var emoji = img.getAttribute('data-fallback') || '📷';
-        if (pai.classList.contains('avatar')) {
-          pai.textContent = emoji;
-        } else {
+        var ehGaleria = pai.classList.contains('foto__midia') || pai.id === 'lightbox-midia';
+
+        if (ehGaleria) {
           pai.innerHTML = '<div class="foto__ausente"><span>' + esc(emoji) + '</span>' +
-                          'imagem ainda não subiu<br><code>' + esc(img.getAttribute('src') || '') + '</code></div>';
+                          'imagem ainda não subiu<br><code>' +
+                          esc(img.getAttribute('src') || '') + '</code></div>';
+        } else {
+          var reserva = document.createElement('span');
+          reserva.textContent = emoji;
+          pai.replaceChild(reserva, img);
         }
       });
     });
@@ -146,6 +166,7 @@ window.ACERVO.utils = (function () {
     dataLegivel: dataLegivel,
     ordenarPorData: ordenarPorData,
     pessoa: pessoa,
+    acento: acento,
     avatar: avatar,
     linkPessoa: linkPessoa,
     pimenta: pimenta,

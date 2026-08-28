@@ -3,8 +3,10 @@
 O museu oficial das pérolas, fotos e momentos cômicos do time de produtos.
 Tudo que é dito, feito e fotografado por aqui fica guardado — para sempre.
 
-> **Estado atual:** esqueleto pronto, conteúdo de exemplo. É só substituir os
-> exemplos pelo material de verdade.
+> **Estado atual:** esqueleto pronto e time cadastrado. Falta o conteúdo:
+> os blocos em `data/frases.js`, `momentos.js`, `galeria.js` e `premios.js`
+> são modelos marcados com `EXEMPLO` — ninguém disse nem fez nada daquilo.
+> Apague-os conforme registrar o material de verdade.
 
 ---
 
@@ -15,6 +17,29 @@ sem `npm install`.** Para ver rodando, basta abrir o `index.html` no navegador.
 
 Todo o conteúdo mora na pasta `data/` — arquivos de texto simples que qualquer
 pessoa do time consegue editar, mesmo sem saber programar.
+
+## Visual
+
+As cores, fontes, cantos e sombras seguem o
+[Design System AUVP](https://produtosauvp.github.io/central/design-system):
+paleta Capital (verde), tokens em HSL no `:root` e no `.dark`, tipografia
+Anek Latin / Roboto / Sora e raio de `0.75rem`. A paleta categórica
+(`--chart-1` a `--chart-8`) identifica cada pessoa — a cor sai automaticamente
+da posição em `data/time.js`, ninguém precisa escolher.
+
+O design system é a base, não uma camisa de força: onde o acervo se afasta
+dele (o easter egg, o confete, as pimentas de absurdo), há um comentário no
+CSS explicando por quê.
+
+### Tema
+
+O site abre no **tema do seu computador**. O botão no topo alterna entre
+Sistema → Claro → Escuro, e a escolha fica salva. Se o computador trocar de
+tema com o site aberto, ele acompanha na hora.
+
+A preferência usa a mesma chave da central do time (`auvp-theme`), e os dois
+sites ficam no mesmo domínio — então quem escolher um tema em um deles
+encontra o mesmo tema no outro.
 
 ## Seções
 
@@ -30,7 +55,7 @@ pessoa do time consegue editar, mesmo sem saber programar.
 ## Adicionando conteúdo
 
 1. Abra o arquivo certo dentro de `data/`:
-   - `time.js` — as pessoas do time (comece por aqui)
+   - `time.js` — as pessoas do time (já cadastradas, com foto)
    - `frases.js` — as pérolas ditas
    - `momentos.js` — os causos da linha do tempo
    - `galeria.js` — fotos e prints
@@ -56,9 +81,11 @@ Exemplo de uma frase nova em `data/frases.js`:
 ### Fotos
 
 Suba os arquivos em `assets/img/galeria/` e aponte o caminho no campo `src`.
-Fotos de perfil vão em `assets/img/pessoas/`, apontadas no campo `foto` de
-`data/time.js`. Se a imagem ainda não existir, o site mostra um card avisando —
-nada quebra.
+Se a imagem ainda não existir, o site mostra um card avisando qual arquivo
+falta — nada quebra.
+
+As fotos de perfil já estão em `assets/img/pessoas/`, vindas da central do
+time, e são apontadas pelo campo `foto` de `data/time.js`.
 
 Dica: comprima as imagens antes de subir (algo em torno de 1200px de largura já
 está ótimo). O repositório agradece.
@@ -111,9 +138,9 @@ Para ligar na primeira vez: **Settings → Pages → Source: GitHub Actions**.
 - O contexto é metade da piada. Sempre preencha.
 - Rimos **com**, não **de**. Se a pessoa não achou graça, sai do ar sem discussão.
 - Print sem data é boato.
+- O acervo é sobre o time, feito pelo time: ninguém entra no site sem saber.
 
 ## Extras escondidos
 
-- Botão **modo caos / modo sério** no topo — para quando alguém passar atrás de você.
 - O subtítulo do topo troca sozinho de tempos em tempos.
 - Existe um código Konami escondido. Boa sorte.

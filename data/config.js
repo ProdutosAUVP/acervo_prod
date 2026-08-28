@@ -9,7 +9,7 @@ window.ACERVO.config = {
   // Nome que aparece no topo e na aba do navegador
   nome: 'Acervo do Time',
   nomeCurto: 'Acervo',
-  time: 'Produtos AUVP',
+  time: 'Time de Produtos AUVP',
 
   // Subtítulos que ficam trocando no topo da home. Adicione quantos quiser.
   subtitulos: [
