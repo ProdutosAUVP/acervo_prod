@@ -1,0 +1,119 @@
+# 🏛️ Acervo do Time
+
+O museu oficial das pérolas, fotos e momentos cômicos do time de produtos.
+Tudo que é dito, feito e fotografado por aqui fica guardado — para sempre.
+
+> **Estado atual:** esqueleto pronto, conteúdo de exemplo. É só substituir os
+> exemplos pelo material de verdade.
+
+---
+
+## Como funciona
+
+Site estático puro: HTML, CSS e JavaScript. **Sem build, sem dependências,
+sem `npm install`.** Para ver rodando, basta abrir o `index.html` no navegador.
+
+Todo o conteúdo mora na pasta `data/` — arquivos de texto simples que qualquer
+pessoa do time consegue editar, mesmo sem saber programar.
+
+## Seções
+
+| Seção | Endereço | O que vai lá |
+|---|---|---|
+| Início | `#/` | Placar do acervo, frase do dia, últimos registros |
+| Frases | `#/frases` | Todas as pérolas, com busca e filtro por pessoa |
+| Galeria | `#/galeria` | Fotos e prints, com lightbox |
+| Momentos | `#/momentos` | Linha do tempo dos causos históricos |
+| Hall da Fama | `#/hall` | Troféus honoríficos |
+| O Time | `#/time` | Perfis, com ficha corrida de cada um |
+
+## Adicionando conteúdo
+
+1. Abra o arquivo certo dentro de `data/`:
+   - `time.js` — as pessoas do time (comece por aqui)
+   - `frases.js` — as pérolas ditas
+   - `momentos.js` — os causos da linha do tempo
+   - `galeria.js` — fotos e prints
+   - `premios.js` — troféus do Hall da Fama
+   - `config.js` — nome do site, subtítulos, textos gerais
+2. Copie um bloco que já existe, cole logo abaixo e edite o conteúdo.
+   A única regra: **vírgula entre um bloco e outro**.
+3. Salve, abra o `index.html` para conferir, e faça commit.
+
+Exemplo de uma frase nova em `data/frases.js`:
+
+```js
+{
+  texto: 'Se ninguém reclamar em produção, é porque funcionou.',
+  autor: 'joao',            // o id da pessoa lá em data/time.js
+  contexto: 'Sexta-feira, 17h50. Ele estava sorrindo.',
+  data: '2026-03-14',       // sempre AAAA-MM-DD
+  tags: ['deploy'],
+  nota: 5                   // 1 a 5 pimentas de absurdo
+},
+```
+
+### Fotos
+
+Suba os arquivos em `assets/img/galeria/` e aponte o caminho no campo `src`.
+Fotos de perfil vão em `assets/img/pessoas/`, apontadas no campo `foto` de
+`data/time.js`. Se a imagem ainda não existir, o site mostra um card avisando —
+nada quebra.
+
+Dica: comprima as imagens antes de subir (algo em torno de 1200px de largura já
+está ótimo). O repositório agradece.
+
+## Rodando localmente
+
+```bash
+# Opção 1 — abrir direto
+open index.html          # macOS
+xdg-open index.html      # Linux
+
+# Opção 2 — servidor local (recomendado se quiser testar em outro dispositivo)
+python3 -m http.server 8000
+# depois acesse http://localhost:8000
+```
+
+## Publicando
+
+O site é publicado pelo **GitHub Pages** a cada push na branch principal
+(veja `.github/workflows/pages.yml`).
+
+Para ligar na primeira vez: **Settings → Pages → Source: GitHub Actions**.
+
+## Estrutura
+
+```
+.
+├── index.html              # a casca do site
+├── assets/
+│   ├── css/style.css       # todos os estilos
+│   ├── js/
+│   │   ├── utils.js        # funções auxiliares
+│   │   ├── views.js        # o HTML de cada página
+│   │   └── app.js          # roteador, tema, busca, lightbox
+│   └── img/
+│       ├── galeria/        # fotos e prints
+│       └── pessoas/        # fotos de perfil
+└── data/                   # 👈 o conteúdo do acervo mora aqui
+    ├── config.js
+    ├── time.js
+    ├── frases.js
+    ├── momentos.js
+    ├── galeria.js
+    └── premios.js
+```
+
+## Regras não escritas do acervo
+
+- Frase editada para ficar melhor perde a graça. Registre como foi dita.
+- O contexto é metade da piada. Sempre preencha.
+- Rimos **com**, não **de**. Se a pessoa não achou graça, sai do ar sem discussão.
+- Print sem data é boato.
+
+## Extras escondidos
+
+- Botão **modo caos / modo sério** no topo — para quando alguém passar atrás de você.
+- O subtítulo do topo troca sozinho de tempos em tempos.
+- Existe um código Konami escondido. Boa sorte.

@@ -1,0 +1,2 @@
+# Fotos de perfil do time.
+# Cadastre o caminho no campo "foto" em data/time.js
