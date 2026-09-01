@@ -33,13 +33,56 @@ CSS explicando por quê.
 
 ### Tema
 
-O site abre no **tema do seu computador**. O botão no topo alterna entre
-Sistema → Claro → Escuro, e a escolha fica salva. Se o computador trocar de
-tema com o site aberto, ele acompanha na hora.
+O site abre no **tema do seu computador**. O ícone no topo alterna entre
+Sistema → Claro → Escuro (o estado atual aparece ao passar o mouse), e a
+escolha fica salva. Se o computador trocar de tema com o site aberto, ele
+acompanha na hora.
 
 A preferência usa a mesma chave da central do time (`auvp-theme`), e os dois
 sites ficam no mesmo domínio — então quem escolher um tema em um deles
 encontra o mesmo tema no outro.
+
+## Modo edição (✏️)
+
+O segundo ícone do topo abre um painel para alterar textos, datas, autores e
+o resto, sem abrir editor de código. Ele cobre todas as seções: frases,
+momentos, galeria, prêmios, o time e os ajustes gerais.
+
+**Senha atual: `acervo2026`** (trocável — veja abaixo).
+
+### Como funciona, e o que ele não é
+
+O acervo é um site estático: **não existe servidor**. O navegador não
+consegue gravar no repositório sozinho, então o fluxo é:
+
+1. você edita no painel e vê o resultado na página na hora;
+2. o rascunho fica salvo **só no seu navegador** — ninguém mais vê;
+3. ao terminar, **Baixar `<arquivo>.js`** (ou *Copiar conteúdo*) entrega o
+   arquivo pronto;
+4. você substitui o `data/<arquivo>.js` no repositório e commita. **É o
+   commit que publica para o time.**
+
+Enquanto houver rascunho não publicado, um ponto amarelo aparece no ✏️ e um
+aviso fica visível dentro do painel. *Descartar rascunho* volta tudo ao que
+está no ar.
+
+### Sobre a senha
+
+⚠️ **A senha não é segurança.** O site roda inteiro no navegador e o
+repositório é público: quem abrir o código-fonte acha o hash dela em
+`data/config.js`. Ela serve para ninguém editar sem querer — nada mais.
+
+Não use aqui uma senha que você usa em outro lugar, e não trate o acervo
+como se fosse privado: qualquer pessoa com o link vê tudo.
+
+Guardamos o SHA-256 em vez do texto puro só para a senha não ficar
+escancarada para quem passa os olhos pelo repositório. Para trocar, use
+*Trocar senha* dentro do painel: ele calcula o novo hash para você colar em
+`data/config.js` e commitar.
+
+A verificação usa a Web Crypto, que o navegador só libera em `https` ou
+`localhost` — pelo site publicado funciona; abrindo o `index.html` por
+`file://` o painel avisa e não destranca.
 
 ## Seções
 
@@ -64,6 +107,9 @@ encontra o mesmo tema no outro.
 2. Copie um bloco que já existe, cole logo abaixo e edite o conteúdo.
    A única regra: **vírgula entre um bloco e outro**.
 3. Salve, abra o `index.html` para conferir, e faça commit.
+
+Prefere não mexer em arquivo? Use o **modo edição** (✏️ no topo) — ele faz o
+mesmo pela tela e entrega o arquivo pronto para commitar.
 
 Exemplo de uma frase nova em `data/frases.js`:
 
@@ -150,3 +196,4 @@ Para ligar na primeira vez: **Settings → Pages → Source: GitHub Actions**.
 
 - O subtítulo do topo troca sozinho de tempos em tempos.
 - Existe um código Konami escondido. Boa sorte.
+- No modo edição, `Esc` fecha o painel.

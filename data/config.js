@@ -26,5 +26,23 @@ window.ACERVO.config = {
   rodape: 'Feito com carinho, café e um pouco de vergonha alheia.',
 
   // Frase que aparece quando uma seção está vazia
-  vazio: 'Nada por aqui ainda. Suspeito. Alguém está escondendo alguma coisa.'
+  vazio: 'Nada por aqui ainda. Suspeito. Alguém está escondendo alguma coisa.',
+
+  /* -----------------------------------------------------------------------
+     SENHA DO MODO EDIÇÃO (ícone ✏️ no topo)
+
+     ⚠️ Leia antes de confiar nisto: o site é estático, roda inteiro no
+     navegador e o repositório é público. Esta senha é uma TRANCA CONTRA
+     DISTRAÇÃO, não segurança — quem abrir o código-fonte acha este arquivo.
+     Não use aqui uma senha que você usa em outro lugar, e não trate o
+     acervo como se fosse privado: qualquer pessoa com o link vê tudo.
+
+     Guardamos o SHA-256 em vez do texto puro só para a senha não ficar
+     escancarada na tela de quem passar os olhos pelo repositório.
+
+     Senha atual: acervo2026
+     Para trocar: entre no modo edição e use "trocar senha" — ele calcula o
+     novo hash para você colar aqui.
+     ----------------------------------------------------------------------- */
+  senhaHash: 'be305402d50a17cf2dc6ba5401d5d6cbd4ab115067428307fc1bb07f3e6cda76'
 };

@@ -52,10 +52,18 @@
       <a href="#/time" data-rota="/time">O Time</a>
     </nav>
 
-    <button class="tema-botao" id="tema-botao" title="Alternar tema: sistema, claro ou escuro">
-      <span id="tema-icone" aria-hidden="true">🖥️</span>
-      <span id="tema-label">Sistema</span>
-    </button>
+    <div class="acoes-topo">
+      <button class="icone-botao" id="tema-botao" title="Tema: Sistema">
+        <span id="tema-icone" aria-hidden="true">🖥️</span>
+        <span class="sr-only" id="tema-label">Sistema</span>
+      </button>
+
+      <button class="icone-botao" id="editor-botao" aria-expanded="false" aria-controls="ed-painel"
+              title="Modo edição — alterar textos, datas e afins">
+        <span aria-hidden="true">✏️</span>
+        <span class="sr-only">Modo edição</span>
+      </button>
+    </div>
   </header>
 
   <!-- ===================== CONTEÚDO ===================== -->
@@ -92,6 +100,8 @@
   <!-- ===================== APLICAÇÃO ===================== -->
   <script src="assets/js/utils.js"></script>
   <script src="assets/js/views.js"></script>
+  <!-- Antes do app.js: aplica o rascunho local antes do primeiro desenho -->
+  <script src="assets/js/editor.js"></script>
   <script src="assets/js/app.js"></script>
 </body>
 </html>

@@ -51,12 +51,15 @@
     var rotulos = { sistema: ['🖥️', 'Sistema'], light: ['☀️', 'Claro'], dark: ['🌙', 'Escuro'] };
 
     if (icone) icone.textContent = rotulos[escolha][0];
+    // O botão é só o ícone; o texto vive no rótulo invisível (leitores de
+    // tela) e no title (quem passa o mouse).
     if (label) label.textContent = rotulos[escolha][1];
     if (botao) {
-      botao.setAttribute('title',
-        'Tema: ' + rotulos[escolha][1] +
+      var descricao = 'Tema: ' + rotulos[escolha][1] +
         (escolha === 'sistema' ? ' (seguindo o seu computador)' : '') +
-        ' — clique para alternar');
+        ' — clique para alternar';
+      botao.setAttribute('title', descricao);
+      botao.setAttribute('aria-label', descricao);
     }
   }
 
@@ -167,6 +170,9 @@
     u.tratarImagens(app);
     ligarEventosDaPagina();
   }
+
+  // O modo edição chama isto para o site refletir a alteração na hora.
+  window.ACERVO.renderizar = renderizar;
 
   function marcarNavegacaoAtiva(secao) {
     var links = document.querySelectorAll('.nav a');
@@ -337,6 +343,7 @@
     iniciarCabecalho();
     iniciarLightbox();
     iniciarKonami();
+    if (window.ACERVO.editor) window.ACERVO.editor.iniciar();
 
     window.addEventListener('hashchange', function () {
       renderizar();
