@@ -120,6 +120,7 @@ window.ACERVO.views = (function () {
           '<div><div class="pessoa__nome">' + u.esc(p.nome) + '</div>' +
           '<div class="pessoa__cargo">' + u.esc(p.cargo || '') + '</div></div>' +
         '</div>' +
+        (p.titulo ? '<span class="selo selo--acento pessoa__titulo">' + u.esc(p.titulo) + '</span>' : '') +
         '<p class="pessoa__bio">' + u.esc(p.bio || '') + '</p>' +
         '<div class="pessoa__numeros">' +
           '<div class="pessoa__numero"><b>' + frases + '</b><span>frases</span></div>' +
@@ -131,36 +132,92 @@ window.ACERVO.views = (function () {
 
   /* ---------------- Páginas ---------------- */
 
+  /* --- Home ---------------------------------------------------------- */
+
+  // Quiz "Quem disse isso?": mostra uma frase sem o autor e três chutes.
+  // Só aparece se houver material suficiente para a brincadeira ter graça.
+  function quiz(indiceFrase) {
+    var d = dados();
+    if (d.frases.length < 1 || d.time.length < 3) return '';
+
+    var f = d.frases[indiceFrase % d.frases.length];
+    var certo = u.pessoa(f.autor);
+
+    // Dois palpites errados, sorteados entre o resto do time
+    var outros = d.time.filter(function (p) { return p.id !== certo.id; });
+    for (var i = outros.length - 1; i > 0; i--) {
+      var k = Math.floor(Math.random() * (i + 1));
+      var t = outros[i]; outros[i] = outros[k]; outros[k] = t;
+    }
+    var opcoes = [certo].concat(outros.slice(0, 2));
+    for (var i2 = opcoes.length - 1; i2 > 0; i2--) {
+      var k2 = Math.floor(Math.random() * (i2 + 1));
+      var t2 = opcoes[i2]; opcoes[i2] = opcoes[k2]; opcoes[k2] = t2;
+    }
+
+    return '' +
+      '<section class="secao quiz" id="quiz" data-frase="' + (indiceFrase % d.frases.length) + '">' +
+        '<div class="secao__topo">' +
+          '<h2>Quem disse isso?</h2>' +
+          '<button class="chip" data-acao="outro-quiz">outra rodada</button>' +
+        '</div>' +
+        '<div class="quiz__caixa">' +
+          '<p class="quiz__frase">“' + u.esc(f.texto) + '”</p>' +
+          '<div class="quiz__opcoes">' +
+            opcoes.map(function (p) {
+              return '<button class="quiz__opcao ' + u.acento(p) + '" type="button" ' +
+                     'data-palpite="' + u.esc(p.id) + '">' +
+                     u.avatar(p) + '<span>' + u.esc(p.nome.split(' ')[0]) + '</span></button>';
+            }).join('') +
+          '</div>' +
+          '<p class="quiz__veredito" id="quiz-veredito" hidden></p>' +
+        '</div>' +
+      '</section>';
+  }
+
   function home() {
     var d = dados();
     var frasesOrdenadas = u.ordenarPorData(d.frases);
     var destaque = u.doDia(frasesOrdenadas);
-    var ultimasFrases = frasesOrdenadas.slice(0, 3);
-    var ultimosMomentos = u.ordenarPorData(d.momentos).slice(0, 3);
+    var ultimasFrases = frasesOrdenadas.slice(0, 2);
+    var ultimosMomentos = u.ordenarPorData(d.momentos).slice(0, 2);
+    var fotos = u.ordenarPorData(d.galeria).slice(0, 6);
+    var img = d.config.destaque || {};
 
     var html = '' +
-      '<section class="hero">' +
-        '<h1>Bem-vindo ao <em>acervo</em>.</h1>' +
-        '<p>Tudo que foi dito, feito e fotografado por este time está guardado aqui. ' +
-        'Não existe apagar. Existe só arquivar melhor.</p>' +
-        '<div class="hero__acoes">' +
-          '<a class="botao" href="#/frases">Ver as pérolas</a>' +
-          '<button class="botao botao--fantasma" data-acao="sortear">🎲 Me surpreenda</button>' +
+      '<section class="hero' + (img.src ? ' hero--com-foto' : '') + '">' +
+        '<div class="hero__texto">' +
+          '<h1>Bem-vindo ao <em>acervo</em>.</h1>' +
+          '<p>Tudo que foi dito, feito e fotografado por este time está guardado aqui. ' +
+          'Não existe apagar. Existe só arquivar melhor.</p>' +
+          '<div class="hero__acoes">' +
+            '<a class="botao" href="#/frases">Ver as pérolas</a>' +
+            '<button class="botao botao--fantasma" data-acao="sortear">🎲 Me surpreenda</button>' +
+          '</div>' +
         '</div>' +
+        (img.src
+          ? '<figure class="hero__foto">' +
+              '<img src="' + u.esc(img.src) + '" alt="' + u.esc(img.legenda || '') + '" ' +
+              'data-fallback="📸">' +
+              (img.legenda ? '<figcaption>' + u.esc(img.legenda) + '</figcaption>' : '') +
+            '</figure>'
+          : '') +
       '</section>' +
 
       '<section class="placar">' +
-        '<div class="placar__item"><div class="placar__numero">' + d.frases.length + '</div>' +
-          '<div class="placar__rotulo">frases arquivadas</div></div>' +
-        '<div class="placar__item"><div class="placar__numero">' + d.momentos.length + '</div>' +
-          '<div class="placar__rotulo">momentos históricos</div></div>' +
-        '<div class="placar__item"><div class="placar__numero">' + d.galeria.length + '</div>' +
-          '<div class="placar__rotulo">evidências visuais</div></div>' +
-        '<div class="placar__item"><div class="placar__numero">' + d.premios.length + '</div>' +
-          '<div class="placar__rotulo">troféus entregues</div></div>' +
-        '<div class="placar__item"><div class="placar__numero">' + d.time.length + '</div>' +
-          '<div class="placar__rotulo">suspeitos</div></div>' +
-      '</section>';
+        '<a class="placar__item" href="#/frases"><div class="placar__numero">' + d.frases.length + '</div>' +
+          '<div class="placar__rotulo">frases arquivadas</div></a>' +
+        '<a class="placar__item" href="#/momentos"><div class="placar__numero">' + d.momentos.length + '</div>' +
+          '<div class="placar__rotulo">momentos históricos</div></a>' +
+        '<a class="placar__item" href="#/galeria"><div class="placar__numero">' + d.galeria.length + '</div>' +
+          '<div class="placar__rotulo">evidências visuais</div></a>' +
+        '<a class="placar__item" href="#/hall"><div class="placar__numero">' + d.premios.length + '</div>' +
+          '<div class="placar__rotulo">troféus entregues</div></a>' +
+        '<a class="placar__item" href="#/time"><div class="placar__numero">' + d.time.length + '</div>' +
+          '<div class="placar__rotulo">suspeitos</div></a>' +
+      '</section>' +
+
+      quiz(Math.floor(Math.random() * Math.max(1, d.frases.length)));
 
     if (destaque) {
       var pd = u.pessoa(destaque.autor);
@@ -176,19 +233,35 @@ window.ACERVO.views = (function () {
         '</section>';
     }
 
+    if (fotos.length) {
+      // Guarda a lista para o lightbox abrir a foto certa daqui mesmo
+      window.ACERVO._galeriaAtual = fotos;
+      html +=
+        '<section class="secao">' +
+          '<div class="secao__topo"><h2>Provas materiais</h2><a href="#/galeria">ver a galeria →</a></div>' +
+          '<div class="faixa">' +
+            fotos.map(function (item, i) {
+              return '<button class="faixa__item" type="button" data-foto="' + i + '">' +
+                       midiaDaGaleria(item) +
+                     '</button>';
+            }).join('') +
+          '</div>' +
+        '</section>';
+    }
+
     html +=
       '<section class="secao">' +
         '<div class="secao__topo"><h2>Últimas pérolas</h2><a href="#/frases">ver todas →</a></div>' +
         (ultimasFrases.length
           ? '<div class="grade-frases">' + ultimasFrases.map(cardFrase).join('') + '</div>'
-          : u.vazio('Nenhuma frase ainda.', 'Abra data/frases.js e registre a primeira.')) +
+          : u.vazio('Nenhuma frase ainda.', 'Abra o modo edição (✏️) e registre a primeira.')) +
       '</section>' +
 
       '<section class="secao">' +
         '<div class="secao__topo"><h2>Acontecimentos recentes</h2><a href="#/momentos">linha do tempo →</a></div>' +
         (ultimosMomentos.length
           ? '<div class="linha-tempo">' + ultimosMomentos.map(cardMomento).join('') + '</div>'
-          : u.vazio('A história ainda não começou.', 'Registre o primeiro causo em data/momentos.js.')) +
+          : u.vazio('A história ainda não começou.', 'Registre o primeiro causo no modo edição (✏️).')) +
       '</section>';
 
     return html;
@@ -297,8 +370,10 @@ window.ACERVO.views = (function () {
     var d = dados();
     return '' +
       '<header class="cabecalho-pagina">' +
-        '<h1>O time</h1>' +
-        '<p>Os responsáveis por absolutamente tudo que está guardado neste acervo.</p>' +
+        '<h1>Os suspeitos</h1>' +
+        '<p>Nove pessoas, nove cargos oficiais e nove cargos de verdade. ' +
+        'Todo o conteúdo deste acervo é responsabilidade de alguém aqui embaixo — ' +
+        'nenhuma delas assume qual.</p>' +
       '</header>' +
       (d.time.length
         ? '<div class="grade-time">' + d.time.map(cardPessoa).join('') + '</div>'
@@ -336,6 +411,7 @@ window.ACERVO.views = (function () {
         u.avatar(p, true) +
         '<div class="perfil__info">' +
           '<h1>' + u.esc(p.nome) + '</h1>' +
+          (p.titulo ? '<span class="selo selo--acento">' + u.esc(p.titulo) + '</span>' : '') +
           '<p class="pessoa__cargo">' + u.esc(p.cargo || '') +
           (p.entrouEm ? ' · no time desde ' + u.esc(p.entrouEm) : '') + '</p>' +
           '<p>' + u.esc(p.bio || '') + '</p>' +
@@ -454,6 +530,7 @@ window.ACERVO.views = (function () {
     comoContribuir: comoContribuir,
     naoEncontrada: naoEncontrada,
     midiaDaGaleria: midiaDaGaleria,
+    quiz: quiz,
     cardFrase: cardFrase
   };
 })();

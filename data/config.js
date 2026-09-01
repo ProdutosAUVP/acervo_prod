@@ -28,6 +28,13 @@ window.ACERVO.config = {
   // Frase que aparece quando uma seção está vazia
   vazio: 'Nada por aqui ainda. Suspeito. Alguém está escondendo alguma coisa.',
 
+  /* Imagem grande no topo da home. Para trocar, aponte para outro arquivo
+     em assets/img/galeria/ — ou mexa em Ajustes, no modo edição. */
+  destaque: {
+    src: 'assets/img/galeria/destaque-time.jpg',
+    legenda: 'O time inteiro num único frame, e nenhuma das nove pessoas parecendo feliz com isso.'
+  },
+
   /* -----------------------------------------------------------------------
      SENHA DO MODO EDIÇÃO (ícone ✏️ no topo)
 
@@ -40,9 +47,9 @@ window.ACERVO.config = {
      Guardamos o SHA-256 em vez do texto puro só para a senha não ficar
      escancarada na tela de quem passar os olhos pelo repositório.
 
-     Senha atual: acervo2026
+     Senha atual: corDaniel*
      Para trocar: entre no modo edição e use "trocar senha" — ele calcula o
      novo hash para você colar aqui.
      ----------------------------------------------------------------------- */
-  senhaHash: 'be305402d50a17cf2dc6ba5401d5d6cbd4ab115067428307fc1bb07f3e6cda76'
+  senhaHash: '7a3cb5e7388fa081383e038926e43461345cb8fbfa2f67c022a52c27aa973e98'
 };

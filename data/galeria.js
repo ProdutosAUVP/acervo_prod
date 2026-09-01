@@ -25,11 +25,38 @@ window.ACERVO = window.ACERVO || {};
 
 window.ACERVO.galeria = [
   {
+    src: 'assets/img/galeria/destaque-time.jpg',
+    legenda: 'O time inteiro num único frame, e nenhuma das nove pessoas parecendo feliz com isso. ' +
+             'Ao fundo, a única pessoa sorrindo — provavelmente quem causou.',
+    aparecem: [],
+    data: '',
+    tags: ['time', 'destaque'],
+    creditos: ''
+  },
+  {
     src: 'assets/img/galeria/daniel-machadoverso.png',
     legenda: 'O machadoverso: Daniel Machado reencaminhando uma mensagem de Daniel Machado.',
     aparecem: ['daniel'],
     data: '2026-07-15',
     tags: ['print', 'machadoverso'],
+    creditos: ''
+  },
+  {
+    src: 'assets/img/galeria/daniel-captura-11jun.png',
+    legenda: 'PARABÉNS. Rosto pintado de AUVP da testa ao queixo, sorriso de quem não sabe ' +
+             'que a foto ia virar patrimônio do time.',
+    aparecem: ['daniel'],
+    data: '2026-06-11',
+    tags: ['parabéns', 'tinta'],
+    creditos: ''
+  },
+  {
+    src: 'assets/img/galeria/daniel-shrek.jpg',
+    legenda: 'Foto institucional, terno alinhado, sorriso profissional. E orelhas de ogro. ' +
+             'O pântano fica logo ali atrás.',
+    aparecem: ['daniel'],
+    data: '',
+    tags: ['montagem', 'shrek'],
     creditos: ''
   },
   {
@@ -54,6 +81,22 @@ window.ACERVO.galeria = [
     aparecem: ['daniel'],
     data: '',
     tags: ['figurinha'],
+    creditos: ''
+  },
+  {
+    src: 'assets/img/galeria/armando-9.png',
+    legenda: 'A juba. O olhar parado. O crachá. Armando em seu habitat natural.',
+    aparecem: ['armando'],
+    data: '',
+    tags: ['sósia', 'juba'],
+    creditos: ''
+  },
+  {
+    src: 'assets/img/galeria/armando-8.png',
+    legenda: 'A mesma juba, agora em modo "acabei de sair de uma revisão de design de 3 horas".',
+    aparecem: ['armando'],
+    data: '',
+    tags: ['sósia', 'juba'],
     creditos: ''
   }
 ];

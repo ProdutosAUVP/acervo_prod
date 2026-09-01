@@ -262,6 +262,63 @@
     if (outra) {
       outra.addEventListener('click', function () { trocarFraseDoDia(false); });
     }
+
+    // Quiz "Quem disse isso?"
+    var palpites = document.querySelectorAll('[data-palpite]');
+    Array.prototype.forEach.call(palpites, function (botao) {
+      botao.addEventListener('click', function () {
+        var quiz = document.getElementById('quiz');
+        var veredito = document.getElementById('quiz-veredito');
+        if (!quiz || !veredito || quiz.classList.contains('quiz--respondido')) return;
+
+        var indice = parseInt(quiz.getAttribute('data-frase'), 10);
+        var frase = (window.ACERVO.frases || [])[indice];
+        if (!frase) return;
+
+        var certo = frase.autor;
+        var acertou = this.getAttribute('data-palpite') === certo;
+        quiz.classList.add('quiz--respondido');
+
+        // Marca todas as opções: a certa em verde, o palpite errado em vermelho
+        Array.prototype.forEach.call(quiz.querySelectorAll('[data-palpite]'), function (b) {
+          if (b.getAttribute('data-palpite') === certo) b.classList.add('quiz__opcao--certa');
+          else if (b === botao) b.classList.add('quiz__opcao--errada');
+          b.disabled = true;
+        });
+
+        var nome = u.pessoa(certo).nome;
+        veredito.hidden = false;
+        veredito.className = 'quiz__veredito ' + (acertou ? 'quiz__veredito--certo' : 'quiz__veredito--errado');
+        veredito.innerHTML = acertou
+          ? '✅ <strong>Acertou.</strong> Foi ' + u.esc(nome) + ' mesmo. ' +
+            'Preocupante você ter reconhecido tão rápido.'
+          : '❌ <strong>Errou.</strong> Quem disse foi ' + u.esc(nome) + '.';
+
+        if (acertou) u.confete(['✅', '🎉', '🧠']);
+      });
+    });
+
+    var outroQuiz = document.querySelector('[data-acao="outro-quiz"]');
+    if (outroQuiz) {
+      // Redesenhar a home inteira sortearia outra frase do dia junto; aqui
+      // só o quiz precisa mudar, então ele é trocado no lugar.
+      outroQuiz.addEventListener('click', function () {
+        var quiz = document.getElementById('quiz');
+        if (!quiz) return;
+        var total = (window.ACERVO.frases || []).length;
+        if (!total) return;
+        var atual = parseInt(quiz.getAttribute('data-frase'), 10);
+        var proximo = total > 1 ? (atual + 1 + Math.floor(Math.random() * (total - 1))) % total : 0;
+
+        var molde = document.createElement('div');
+        molde.innerHTML = views.quiz(proximo);
+        var novo = molde.firstChild;
+        if (!novo) return;
+        quiz.parentNode.replaceChild(novo, quiz);
+        u.tratarImagens(novo);
+        ligarEventosDaPagina();
+      });
+    }
   }
 
   /* ---------------- Lightbox ---------------- */

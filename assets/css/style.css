@@ -426,6 +426,34 @@ a.selo:hover { border-color: hsl(var(--acento, var(--ring))); color: hsl(var(--f
   margin-bottom: 40px;
   overflow: hidden;
 }
+/* Com imagem de destaque o hero vira duas colunas; sem ela, segue como era */
+.hero--com-foto {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(20px, 4vw, 40px);
+  align-items: center;
+}
+.hero__texto { min-width: 0; }
+
+.hero__foto { margin: 0; min-width: 0; }
+.hero__foto img {
+  width: 100%;
+  border-radius: var(--radius);
+  border: 1px solid hsl(var(--border));
+  box-shadow: var(--sombra-2);
+}
+.hero__foto figcaption {
+  margin-top: 10px;
+  font-family: var(--font-ui);
+  font-size: .78rem;
+  line-height: 1.5;
+  color: hsl(var(--muted-foreground));
+}
+
+@media (max-width: 760px) {
+  .hero--com-foto { grid-template-columns: 1fr; }
+}
+
 .hero h1 { max-width: 18ch; }
 .hero h1 em { font-style: normal; color: hsl(var(--brand)); }
 .hero p { color: hsl(var(--muted-foreground)); max-width: 56ch; font-size: 1.05rem; }
@@ -444,7 +472,12 @@ a.selo:hover { border-color: hsl(var(--acento, var(--ring))); color: hsl(var(--f
   background: hsl(var(--card));
   transition: var(--anima);
 }
-.placar__item:hover { border-color: hsl(var(--ring)); box-shadow: var(--sombra-1); }
+.placar__item { display: block; color: inherit; }
+.placar__item:hover {
+  border-color: hsl(var(--ring));
+  box-shadow: var(--sombra-2);
+  transform: translateY(-2px);
+}
 .placar__numero {
   font-family: var(--font-display);
   font-size: 2.25rem;
@@ -472,6 +505,101 @@ a.selo:hover { border-color: hsl(var(--acento, var(--ring))); color: hsl(var(--f
   font-size: .85rem;
 }
 .secao__topo a:hover { text-decoration: underline; }
+
+/* Quiz "Quem disse isso?" */
+.quiz__caixa {
+  padding: clamp(20px, 4vw, 32px);
+  border: 1px solid hsl(var(--border));
+  border-radius: calc(var(--radius) * 1.5);
+  background:
+    radial-gradient(100% 140% at 100% 0%, hsl(var(--brand) / .08), transparent 60%),
+    hsl(var(--card));
+  box-shadow: var(--sombra-1);
+}
+.quiz__frase {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.2rem, 2.6vw, 1.6rem);
+  line-height: 1.25;
+  margin: 0 0 18px;
+}
+.quiz__opcoes { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.quiz__opcao {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 7px 14px 7px 7px;
+  border-radius: 999px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  color: hsl(var(--foreground));
+  font-family: var(--font-ui);
+  font-size: .875rem;
+  transition: var(--anima);
+}
+.quiz__opcao .avatar { width: 30px; height: 30px; font-size: .85rem; }
+.quiz__opcao:hover:not(:disabled) {
+  border-color: hsl(var(--acento, var(--ring)));
+  transform: translateY(-2px);
+  box-shadow: var(--sombra-1);
+}
+.quiz__opcao:disabled { cursor: default; opacity: .55; }
+
+.quiz__opcao--certa {
+  border-color: hsl(var(--success));
+  background: hsl(var(--success) / .15);
+  opacity: 1 !important;
+  font-weight: 600;
+}
+.quiz__opcao--errada {
+  border-color: hsl(var(--error));
+  background: hsl(var(--error) / .12);
+  opacity: 1 !important;
+}
+
+.quiz__veredito {
+  margin: 16px 0 0;
+  font-size: .9rem;
+  line-height: 1.5;
+}
+.quiz__veredito[hidden] { display: none; }
+.quiz__veredito--certo { color: hsl(var(--success)); }
+.quiz__veredito--errado { color: hsl(var(--error)); }
+
+/* Faixa de fotos da home */
+.faixa {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(150px, 1fr);
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+}
+.faixa__item {
+  position: relative;
+  padding: 0;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  background: hsl(var(--muted));
+  overflow: hidden;
+  cursor: zoom-in;
+  aspect-ratio: 1;
+  transition: var(--anima);
+}
+.faixa__item:hover { transform: translateY(-3px); box-shadow: var(--sombra-2); border-color: hsl(var(--ring)); }
+.faixa__item img,
+.faixa__item video { width: 100%; height: 100%; object-fit: cover; }
+.faixa__item .foto__ausente { padding: 8px; font-size: .62rem; }
+.faixa__item .foto__ausente span { font-size: 1.3rem; }
+.faixa__item .foto__ausente code,
+.faixa__item .foto__ausente a { display: none; }
+
+@media (max-width: 620px) {
+  .faixa { grid-auto-columns: minmax(120px, 1fr); }
+}
+
+/* Título honorífico na lista do time */
+.pessoa__titulo { margin-bottom: 10px; }
 
 /* Frases */
 .grade-frases {

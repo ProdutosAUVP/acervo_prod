@@ -48,7 +48,7 @@ O segundo ícone do topo abre um painel para alterar textos, datas, autores e
 o resto, sem abrir editor de código. Ele cobre todas as seções: frases,
 momentos, galeria, prêmios, o time e os ajustes gerais.
 
-**Senha atual: `acervo2026`** (trocável — veja abaixo).
+**Senha atual: `corDaniel*`** (trocável — veja abaixo).
 
 ### Como funciona, e o que ele não é
 
@@ -88,12 +88,12 @@ A verificação usa a Web Crypto, que o navegador só libera em `https` ou
 
 | Seção | Endereço | O que vai lá |
 |---|---|---|
-| Início | `#/` | Placar do acervo, frase do dia, últimos registros |
+| Início | `#/` | Foto em destaque, placar, quiz "Quem disse isso?", frase do dia, faixa de fotos e os últimos registros |
 | Frases | `#/frases` | Todas as pérolas, com busca e filtro por pessoa |
 | Galeria | `#/galeria` | Fotos, prints e vídeos, com lightbox |
 | Momentos | `#/momentos` | Linha do tempo dos causos históricos |
 | Hall da Fama | `#/hall` | Troféus honoríficos |
-| O Time | `#/time` | Perfis, com ficha corrida de cada um |
+| O Time | `#/time` | Perfis com cargo oficial, cargo honorífico e ficha corrida |
 
 ## Adicionando conteúdo
 
@@ -194,6 +194,8 @@ Para ligar na primeira vez: **Settings → Pages → Source: GitHub Actions**.
 
 ## Extras escondidos
 
+- A foto grande da home sai de `destaque` em `data/config.js` (ou da aba Ajustes no modo edição).
+- O quiz da home sorteia entre as frases cadastradas: quanto mais pérolas, melhor ele fica.
 - O subtítulo do topo troca sozinho de tempos em tempos.
 - Existe um código Konami escondido. Boa sorte.
 - No modo edição, `Esc` fecha o painel.
