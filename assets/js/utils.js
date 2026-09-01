@@ -78,6 +78,12 @@ window.ACERVO.utils = (function () {
            esc(p.emoji || '👤') + ' ' + esc(p.nome) + '</a>';
   }
 
+  /* --- Mídia --- */
+  // A galeria aceita imagem e vídeo; o tipo sai da extensão do arquivo.
+  function ehVideo(src) {
+    return /\.(mp4|webm|ogv|ogg|mov|m4v)$/i.test(String(src || ''));
+  }
+
   /* --- Diversos --- */
   function pimenta(nota) {
     var n = Math.max(0, Math.min(5, parseInt(nota, 10) || 0));
@@ -140,18 +146,28 @@ window.ACERVO.utils = (function () {
      num chip, o card de aviso destruiria o componente — ali entra só o
      emoji de reserva no lugar da imagem. */
   function tratarImagens(raiz) {
-    var imgs = (raiz || document).querySelectorAll('img[data-fallback]');
+    var imgs = (raiz || document).querySelectorAll('img[data-fallback], video[data-fallback]');
     Array.prototype.forEach.call(imgs, function (img) {
       img.addEventListener('error', function () {
         var pai = img.parentNode;
         if (!pai) return;
         var emoji = img.getAttribute('data-fallback') || '📷';
         var ehGaleria = pai.classList.contains('foto__midia') || pai.id === 'lightbox-midia';
+        // Um vídeo quebrado deixa o distintivo de play órfão; ele sai junto.
+        var play = pai.querySelector && pai.querySelector('.foto__play');
+        if (play) play.remove();
 
         if (ehGaleria) {
+          var caminho = esc(img.getAttribute('src') || '');
+          // Imagem que falha quase sempre é arquivo que não subiu. Vídeo pode
+          // ser isso ou um navegador sem o codec — a mensagem não afirma a
+          // causa errada, e o link deixa o arquivo acessível de qualquer jeito.
+          var recado = img.tagName === 'VIDEO'
+            ? 'não foi possível reproduzir este vídeo aqui<br>' +
+              '<a href="' + caminho + '" target="_blank" rel="noopener">abrir o arquivo</a><br>'
+            : 'imagem ainda não subiu<br>';
           pai.innerHTML = '<div class="foto__ausente"><span>' + esc(emoji) + '</span>' +
-                          'imagem ainda não subiu<br><code>' +
-                          esc(img.getAttribute('src') || '') + '</code></div>';
+                          recado + '<code>' + caminho + '</code></div>';
         } else {
           var reserva = document.createElement('span');
           reserva.textContent = emoji;
@@ -174,6 +190,7 @@ window.ACERVO.utils = (function () {
     doDia: doDia,
     aleatorio: aleatorio,
     normalizar: normalizar,
+    ehVideo: ehVideo,
     vazio: vazio,
     confete: confete,
     tratarImagens: tratarImagens

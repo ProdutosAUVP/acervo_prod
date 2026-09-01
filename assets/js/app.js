@@ -270,9 +270,18 @@
     if (!item) return;
 
     focoAnterior = document.activeElement;
-    lightboxMidia.innerHTML = item.src
-      ? '<img src="' + u.esc(item.src) + '" alt="' + u.esc(item.legenda || '') + '" data-fallback="📷">'
-      : '<div class="foto__ausente"><span>📷</span>imagem ainda não subiu</div>';
+
+    // No lightbox o vídeo ganha controles e som — no card ele é só miniatura.
+    if (item.src && u.ehVideo(item.src)) {
+      lightboxMidia.innerHTML =
+        '<video src="' + u.esc(item.src) + '" controls autoplay playsinline ' +
+        'aria-label="' + u.esc(item.legenda || 'Vídeo do acervo') + '" data-fallback="🎬"></video>';
+    } else if (item.src) {
+      lightboxMidia.innerHTML =
+        '<img src="' + u.esc(item.src) + '" alt="' + u.esc(item.legenda || '') + '" data-fallback="📷">';
+    } else {
+      lightboxMidia.innerHTML = '<div class="foto__ausente"><span>📷</span>arquivo ainda não subiu</div>';
+    }
 
     var quem = (item.aparecem || []).map(function (id) { return u.pessoa(id).nome; }).join(', ');
     lightboxLegenda.innerHTML = u.esc(item.legenda || '') +

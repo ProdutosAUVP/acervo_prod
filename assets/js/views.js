@@ -42,11 +42,23 @@ window.ACERVO.views = (function () {
       '</article>';
   }
 
+  // A galeria guarda foto, print e vídeo. O vídeo entra mudo e sem controles
+  // no card (é só a miniatura); o som e os controles ficam para o lightbox.
+  function midiaDaGaleria(item) {
+    if (!item.src) return '<div class="foto__ausente"><span>📷</span>sem imagem</div>';
+
+    if (u.ehVideo(item.src)) {
+      return '<video src="' + u.esc(item.src) + '" preload="metadata" muted playsinline ' +
+             'aria-label="' + u.esc(item.legenda || 'Vídeo do acervo') + '" data-fallback="🎬"></video>' +
+             '<span class="foto__play" aria-hidden="true">▶</span>';
+    }
+
+    return '<img src="' + u.esc(item.src) + '" alt="' + u.esc(item.legenda || 'Foto do acervo') + '" ' +
+           'loading="lazy" data-fallback="📷">';
+  }
+
   function cardFoto(item, indice) {
-    var midia = item.src
-      ? '<img src="' + u.esc(item.src) + '" alt="' + u.esc(item.legenda || 'Foto do acervo') + '" ' +
-        'loading="lazy" data-fallback="📷">'
-      : '<div class="foto__ausente"><span>📷</span>sem imagem</div>';
+    var midia = midiaDaGaleria(item);
 
     var quem = (item.aparecem || []).map(function (id) {
       return u.esc(u.pessoa(id).nome);
@@ -394,9 +406,13 @@ window.ACERVO.views = (function () {
         '  nota: 5                    // 1 a 5 pimentas de absurdo\n' +
         '},</code></pre>' +
 
-        '<h3>3. Fotos</h3>' +
+        '<h3>3. Fotos, prints e vídeos</h3>' +
         '<p>Suba os arquivos em <code>assets/img/galeria/</code> e referencie o caminho no campo ' +
-        '<code>src</code>. Se a imagem não existir ainda, o site mostra um card avisando — nada quebra.</p>' +
+        '<code>src</code>. Vale imagem e vídeo (<code>.mp4</code>, <code>.webm</code>): o vídeo vira ' +
+        'miniatura no mural e toca com som ao abrir. Se o arquivo não existir ainda, o site mostra ' +
+        'um card avisando — nada quebra.</p>' +
+        '<p>Nome de arquivo sem espaço, sem parêntese e sem acento — esses viram <code>%20</code> e ' +
+        '<code>%28</code> na URL e dão dor de cabeça.</p>' +
 
         '<h3>4. Veja antes de publicar</h3>' +
         '<p>Abra o <code>index.html</code> direto no navegador. Não precisa instalar nada, ' +
@@ -437,6 +453,7 @@ window.ACERVO.views = (function () {
     perfil: perfil,
     comoContribuir: comoContribuir,
     naoEncontrada: naoEncontrada,
+    midiaDaGaleria: midiaDaGaleria,
     cardFrase: cardFrase
   };
 })();

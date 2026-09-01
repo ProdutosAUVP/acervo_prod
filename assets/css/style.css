@@ -541,8 +541,34 @@ a.selo:hover { border-color: hsl(var(--acento, var(--ring))); color: hsl(var(--f
   transition: var(--anima);
 }
 .foto:hover { box-shadow: var(--sombra-2); transform: translateY(-2px); }
-.foto__midia { aspect-ratio: 4 / 3; background: hsl(var(--muted)); display: grid; place-items: center; }
-.foto__midia img { width: 100%; height: 100%; object-fit: cover; }
+/* Mural em colunas: cada arquivo mantém a proporção que tem. Forçar 4/3
+   com object-fit:cover decapitava print largo e foto vertical — justamente
+   os dois formatos que mais aparecem aqui. A proporção fixa fica só para o
+   estado sem arquivo, que precisa de uma altura para não colapsar. */
+.foto__midia {
+  position: relative;   /* âncora do distintivo de play */
+  background: hsl(var(--muted));
+  display: grid; place-items: center;
+  min-height: 60px;
+}
+.foto__midia img,
+.foto__midia video { width: 100%; height: auto; }
+.foto__midia:has(.foto__ausente) { aspect-ratio: 4 / 3; }
+
+/* Distintivo de play: marca o card que é vídeo antes de qualquer clique */
+.foto__play {
+  position: absolute;
+  right: 10px; bottom: 10px;
+  display: grid; place-items: center;
+  width: 34px; height: 34px;
+  padding-left: 3px;              /* centra o triângulo, que é torto por natureza */
+  border-radius: 50%;
+  background: hsl(0 0% 0% / .6);
+  color: #fff;
+  font-size: .8rem;
+  backdrop-filter: blur(4px);
+  pointer-events: none;
+}
 .foto__ausente {
   display: grid; place-items: center; gap: 6px;
   padding: 20px; text-align: center;
@@ -550,6 +576,7 @@ a.selo:hover { border-color: hsl(var(--acento, var(--ring))); color: hsl(var(--f
 }
 .foto__ausente span { font-size: 2rem; }
 .foto__ausente code { font-size: .7rem; word-break: break-all; }
+.foto__ausente a { color: hsl(var(--primary-emphasis)); text-decoration: underline; }
 .foto__legenda { padding: 14px 16px 0; font-size: .925rem; }
 .foto__meta {
   padding: 8px 16px 14px;
@@ -734,9 +761,11 @@ a.selo:hover { border-color: hsl(var(--acento, var(--ring))); color: hsl(var(--f
 }
 .lightbox[hidden] { display: none; }
 .lightbox__conteudo { margin: 0; max-width: min(900px, 100%); max-height: 90vh; overflow: auto; }
-.lightbox__midia img {
-  max-height: 70vh; width: auto; margin: 0 auto;
+.lightbox__midia img,
+.lightbox__midia video {
+  max-height: 70vh; width: auto; max-width: 100%; margin: 0 auto;
   border-radius: var(--radius);
+  display: block;
 }
 .lightbox figcaption { color: #fff; text-align: center; margin-top: 14px; font-size: .95rem; }
 .lightbox figcaption small { color: hsl(0 0% 100% / .7); font-family: var(--font-ui); font-size: .78rem; }

@@ -47,7 +47,7 @@ encontra o mesmo tema no outro.
 |---|---|---|
 | Início | `#/` | Placar do acervo, frase do dia, últimos registros |
 | Frases | `#/frases` | Todas as pérolas, com busca e filtro por pessoa |
-| Galeria | `#/galeria` | Fotos e prints, com lightbox |
+| Galeria | `#/galeria` | Fotos, prints e vídeos, com lightbox |
 | Momentos | `#/momentos` | Linha do tempo dos causos históricos |
 | Hall da Fama | `#/hall` | Troféus honoríficos |
 | O Time | `#/time` | Perfis, com ficha corrida de cada um |
@@ -78,11 +78,17 @@ Exemplo de uma frase nova em `data/frases.js`:
 },
 ```
 
-### Fotos
+### Fotos, prints e vídeos
 
 Suba os arquivos em `assets/img/galeria/` e aponte o caminho no campo `src`.
-Se a imagem ainda não existir, o site mostra um card avisando qual arquivo
+Vale imagem (jpg, png, gif, webp) e vídeo (mp4, webm): o vídeo aparece como
+miniatura no mural, com um selo ▶, e toca com som e controles ao abrir no
+lightbox. Se o arquivo ainda não existir, o site mostra um card avisando qual
 falta — nada quebra.
+
+Use nomes sem espaço, sem parêntese e sem acento: eles viram `%20` e `%28` na
+URL. E prefira `.mp4` a `.mov` — o mesmo vídeo com a extensão errada é servido
+com o tipo errado e alguns navegadores se recusam a tocar.
 
 As fotos de perfil já estão em `assets/img/pessoas/`, vindas da central do
 time, e são apontadas pelo campo `foto` de `data/time.js`.
