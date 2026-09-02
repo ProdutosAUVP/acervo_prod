@@ -51,5 +51,17 @@ window.ACERVO.config = {
      Para trocar: entre no modo edição e use "trocar senha" — ele calcula o
      novo hash para você colar aqui.
      ----------------------------------------------------------------------- */
-  senhaHash: '7a3cb5e7388fa081383e038926e43461345cb8fbfa2f67c022a52c27aa973e98'
+  senhaHash: '7a3cb5e7388fa081383e038926e43461345cb8fbfa2f67c022a52c27aa973e98',
+
+  /* -----------------------------------------------------------------------
+     PUBLICAÇÃO DIRETA (botão "Publicar no GitHub" do modo edição)
+
+     Para onde o painel commita. Se o repositório mudar de nome ou de dono,
+     é aqui que se ajusta.
+     ----------------------------------------------------------------------- */
+  github: {
+    owner: 'ProdutosAUVP',
+    repo: 'acervo_prod',
+    branch: 'main'
+  }
 };

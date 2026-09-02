@@ -1102,6 +1102,39 @@ a.selo:hover { border-color: hsl(var(--acento, var(--ring))); color: hsl(var(--f
 .ed-publicar__acoes { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
 .ed-publicar__acoes .botao { font-size: .82rem; padding: 9px 15px; }
 
+/* Conectar ao GitHub e status da publicação */
+.ed-token {
+  border: 1px solid hsl(var(--border));
+  border-radius: calc(var(--radius) - 4px);
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  background: hsl(var(--card));
+}
+.ed-token summary {
+  cursor: pointer;
+  font-family: var(--font-ui);
+  font-size: .82rem;
+  font-weight: 600;
+}
+.ed-token[open] summary { margin-bottom: 10px; }
+.ed-token .ed-check { margin-bottom: 8px; }
+.ed-aviso a { color: hsl(var(--primary-emphasis)); text-decoration: underline; }
+
+.ed-status {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-radius: calc(var(--radius) - 4px);
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--muted));
+  font-size: .8rem;
+  line-height: 1.5;
+}
+.ed-status[hidden] { display: none; }
+.ed-status--ok { border-color: hsl(var(--success) / .5); background: hsl(var(--success) / .12); }
+.ed-status--erro { border-color: hsl(var(--error) / .5); background: hsl(var(--error) / .1); }
+
+.ed-publicar__manual { margin-top: 18px; padding-top: 14px; border-top: 1px dashed hsl(var(--border)); }
+
 .ed-senha { max-width: 340px; }
 .ed-senha__titulo {
   font-family: var(--font-display);

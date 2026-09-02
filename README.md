@@ -50,21 +50,49 @@ momentos, galeria, prêmios, o time e os ajustes gerais.
 
 **Senha atual: `corDaniel*`** (trocável — veja abaixo).
 
-### Como funciona, e o que ele não é
+### Publicando de verdade
 
-O acervo é um site estático: **não existe servidor**. O navegador não
-consegue gravar no repositório sozinho, então o fluxo é:
+O acervo é um site estático, sem servidor próprio. Mesmo assim o painel
+publica para o time em um clique: ele commita os arquivos alterados direto
+pela API do GitHub.
 
 1. você edita no painel e vê o resultado na página na hora;
 2. o rascunho fica salvo **só no seu navegador** — ninguém mais vê;
-3. ao terminar, **Baixar `<arquivo>.js`** (ou *Copiar conteúdo*) entrega o
-   arquivo pronto;
-4. você substitui o `data/<arquivo>.js` no repositório e commita. **É o
-   commit que publica para o time.**
+3. **⬆ Publicar no GitHub** manda todos os arquivos alterados num **único
+   commit**;
+4. o Pages reconstrói e, em cerca de um minuto, o time vê a alteração.
 
-Enquanto houver rascunho não publicado, um ponto amarelo aparece no ✏️ e um
-aviso fica visível dentro do painel. *Descartar rascunho* volta tudo ao que
-está no ar.
+Enquanto o site publicado não alcança o seu rascunho, um ponto amarelo fica
+no ✏️ e um aviso aparece no painel. **Você não precisa limpar nada**: no
+primeiro carregamento em que o arquivo publicado bater com o rascunho, ele
+se apaga sozinho e o aviso some. *Descartar rascunho* volta tudo ao que está
+no ar imediatamente.
+
+Sem token, o caminho manual continua: **Baixar** ou **Copiar conteúdo**
+entrega o `data/<arquivo>.js` pronto para commitar na mão.
+
+### O token do GitHub
+
+Para publicar daqui, o painel pede um token que fica guardado no seu
+navegador. **Ele é sensível de verdade** — diferente da senha do painel,
+quem puser a mão nele publica no site.
+
+Crie um **fine-grained token** o mais restrito possível:
+
+- **Repository access:** apenas `ProdutosAUVP/acervo_prod`
+- **Permissions → Contents:** `Read and write` (só isso)
+- **Expiration:** curta
+
+[Criar o token](https://github.com/settings/personal-access-tokens/new)
+
+Por padrão ele fica só na sessão e **some quando você fecha o navegador** —
+o certo em máquina compartilhada. Marcando *Lembrar neste computador* ele
+passa para o `localStorage` e sobrevive; use só na sua máquina. *Esquecer
+token* apaga dos dois lugares.
+
+Cada pessoa que for publicar precisa do próprio token. Se um dia o time
+inteiro for editar, o caminho melhor é login com GitHub (OAuth), que exige
+um back-end pequeno — hoje não temos isso.
 
 ### Sobre a senha
 

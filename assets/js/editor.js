@@ -1,18 +1,26 @@
 /* =========================================================================
    MODO EDIÇÃO (ícone ✏️ no topo)
 
-   Como isto funciona — e o que ele NÃO é:
+   Como isto funciona:
 
-   O acervo é um site estático no GitHub Pages. Não existe servidor, então
-   o navegador não consegue gravar no repositório sozinho. O fluxo é:
+   O acervo é um site estático no GitHub Pages, sem servidor próprio. O
+   fluxo é:
 
      1. você edita aqui e vê o resultado na hora;
      2. o rascunho fica salvo no SEU navegador (ninguém mais vê);
-     3. ao terminar, "Gerar arquivo" entrega o data/<arquivo>.js pronto;
-     4. você commita esse arquivo — é o commit que publica para o time.
+     3. "Publicar no GitHub" commita os arquivos alterados direto pela API,
+        num único commit, usando um token que você fornece;
+     4. o GitHub Pages reconstrói o site e o time passa a ver a alteração.
+
+   Sem token dá para seguir pelo caminho manual: "Baixar" ou "Copiar" entrega
+   o data/<arquivo>.js pronto para commitar na mão.
+
+   O rascunho some sozinho quando o site publicado alcança o que está aqui —
+   comparamos o que veio dos arquivos com o rascunho a cada carregamento.
 
    A senha (data/config.js) tranca o painel contra edição acidental. Ela não
-   é segurança: o código roda no navegador e o repositório é público.
+   é segurança: o código roda no navegador e o repositório é público. O token
+   do GitHub, esse sim, é sensível — leia os avisos no painel.
    ========================================================================= */
 
 window.ACERVO = window.ACERVO || {};
@@ -151,6 +159,13 @@ window.ACERVO.editor = (function () {
   var estado = { aberto: false, liberado: false, colecao: 'frases', abertoItem: null };
   var painel = null;
 
+  // Retrato do que veio dos arquivos data/*.js, tirado antes de aplicar o
+  // rascunho. É a referência para saber o que mudou e o que publicar.
+  var PUBLICADO = {};
+  Object.keys(COLECOES).forEach(function (k) {
+    PUBLICADO[k] = JSON.parse(JSON.stringify(window.ACERVO[k] || (COLECOES[k].lista ? [] : {})));
+  });
+
   /* ---------------------------------------------------------------------
      Rascunho local
      --------------------------------------------------------------------- */
@@ -162,23 +177,56 @@ window.ACERVO.editor = (function () {
     }
   }
 
+  // Guardamos também o estado publicado (PUBLICADO), capturado antes de o
+  // rascunho ser aplicado, para saber quais coleções realmente mudaram.
   function salvarRascunho() {
-    var r = {};
-    Object.keys(COLECOES).forEach(function (k) { r[k] = window.ACERVO[k]; });
+    var r = lerRascunho();
+    Object.keys(COLECOES).forEach(function (k) {
+      if (JSON.stringify(window.ACERVO[k]) === JSON.stringify(PUBLICADO[k])) delete r[k];
+      else r[k] = window.ACERVO[k];
+    });
     try {
-      localStorage.setItem(CHAVE_RASCUNHO, JSON.stringify(r));
+      if (Object.keys(r).length) localStorage.setItem(CHAVE_RASCUNHO, JSON.stringify(r));
+      else localStorage.removeItem(CHAVE_RASCUNHO);
     } catch (e) { /* sem espaço ou modo anônimo: a edição vale só nesta aba */ }
     marcarRascunho();
   }
 
   // Aplicado no carregamento, antes do primeiro desenho: quem editou e
   // recarregou continua vendo o próprio rascunho.
+  //
+  // Antes de aplicar, descartamos as coleções em que o arquivo publicado já
+  // ficou igual ao rascunho. É o que faz o aviso de "não publicado" sumir
+  // sozinho quando o GitHub Pages termina de reconstruir, sem ninguém
+  // precisar limpar nada na mão.
   function aplicarRascunho() {
     var r = lerRascunho();
+    var mudou = false;
+
     Object.keys(COLECOES).forEach(function (k) {
-      if (r[k]) window.ACERVO[k] = r[k];
+      if (!r[k]) return;
+      if (JSON.stringify(window.ACERVO[k]) === JSON.stringify(r[k])) {
+        delete r[k];         // o publicado alcançou o rascunho
+        mudou = true;
+        return;
+      }
+      window.ACERVO[k] = r[k];
     });
+
+    if (mudou) {
+      try {
+        if (Object.keys(r).length) localStorage.setItem(CHAVE_RASCUNHO, JSON.stringify(r));
+        else localStorage.removeItem(CHAVE_RASCUNHO);
+      } catch (e) { /* ignora */ }
+    }
+
     return Object.keys(r).length > 0;
+  }
+
+  // Só as coleções que diferem do que está publicado precisam ir no commit.
+  function colecoesAlteradas() {
+    var r = lerRascunho();
+    return Object.keys(COLECOES).filter(function (k) { return !!r[k]; });
   }
 
   function descartarRascunho() {
@@ -255,6 +303,134 @@ window.ACERVO.editor = (function () {
     } else {
       aviso('não deu — use "Baixar"');
     }
+  }
+
+  /* ---------------------------------------------------------------------
+     Publicação direta no GitHub
+
+     Commita os arquivos alterados pela API do GitHub, num único commit,
+     usando a Git Data API: cria uma árvore com base na atual, faz o commit
+     e move a branch. Um PUT por arquivo seria mais simples, mas geraria um
+     commit e uma reconstrução do Pages para cada arquivo.
+     --------------------------------------------------------------------- */
+  var CHAVE_TOKEN = 'acervo:token-github';
+
+  function lerToken() {
+    try {
+      return sessionStorage.getItem(CHAVE_TOKEN) || localStorage.getItem(CHAVE_TOKEN) || '';
+    } catch (e) {
+      return '';
+    }
+  }
+
+  function guardarToken(token, lembrar) {
+    try {
+      sessionStorage.removeItem(CHAVE_TOKEN);
+      localStorage.removeItem(CHAVE_TOKEN);
+      (lembrar ? localStorage : sessionStorage).setItem(CHAVE_TOKEN, token);
+    } catch (e) { /* modo anônimo: vale só nesta aba */ }
+  }
+
+  function esquecerToken() {
+    try {
+      sessionStorage.removeItem(CHAVE_TOKEN);
+      localStorage.removeItem(CHAVE_TOKEN);
+    } catch (e) { /* ignora */ }
+  }
+
+  function repo() {
+    var g = (window.ACERVO.config || {}).github || {};
+    return {
+      owner: g.owner || '',
+      repo: g.repo || '',
+      branch: g.branch || 'main',
+      base: 'https://api.github.com/repos/' + (g.owner || '') + '/' + (g.repo || '')
+    };
+  }
+
+  function chamarGitHub(url, token, opcoes) {
+    opcoes = opcoes || {};
+    return fetch(url, {
+      method: opcoes.metodo || 'GET',
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Accept': 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28'
+      },
+      body: opcoes.corpo ? JSON.stringify(opcoes.corpo) : undefined
+    }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (corpo) {
+        if (r.ok) return corpo;
+
+        // Mensagens por causa provável, em vez do texto cru da API
+        var msg;
+        if (r.status === 401) msg = 'Token inválido ou expirado.';
+        else if (r.status === 403) msg = 'O token não tem permissão de escrita neste repositório.';
+        else if (r.status === 404) msg = 'Repositório não encontrado — ou o token não enxerga ele. ' +
+          'Confira se o token foi criado com acesso a ' + repo().owner + '/' + repo().repo + '.';
+        else if (r.status === 409 || r.status === 422) msg = 'Alguém commitou antes de você. ' +
+          'Recarregue a página e refaça a alteração.';
+        else msg = 'GitHub respondeu ' + r.status + ': ' + (corpo.message || 'erro desconhecido');
+
+        var erro = new Error(msg);
+        erro.status = r.status;
+        throw erro;
+      });
+    });
+  }
+
+  function publicarNoGitHub(token, aoAndar) {
+    var r = repo();
+    var chaves = colecoesAlteradas();
+    if (!chaves.length) return Promise.reject(new Error('Não há nada alterado para publicar.'));
+    if (!r.owner || !r.repo) return Promise.reject(new Error('Faltam owner/repo em data/config.js.'));
+
+    var refUrl = r.base + '/git/ref/heads/' + encodeURIComponent(r.branch);
+    var shaBase, shaArvoreBase, quem;
+
+    aoAndar('Conferindo o token…');
+    return chamarGitHub('https://api.github.com/user', token)
+      .then(function (u) {
+        quem = u.login;
+        aoAndar('Lendo a branch ' + r.branch + '…');
+        return chamarGitHub(refUrl, token);
+      })
+      .then(function (ref) {
+        shaBase = ref.object.sha;
+        return chamarGitHub(r.base + '/git/commits/' + shaBase, token);
+      })
+      .then(function (commit) {
+        shaArvoreBase = commit.tree.sha;
+        aoAndar('Montando o commit com ' + chaves.length + ' arquivo(s)…');
+        return chamarGitHub(r.base + '/git/trees', token, {
+          metodo: 'POST',
+          corpo: {
+            base_tree: shaArvoreBase,
+            tree: chaves.map(function (k) {
+              return { path: 'data/' + k + '.js', mode: '100644', type: 'blob', content: serializar(k) };
+            })
+          }
+        });
+      })
+      .then(function (arvore) {
+        var lista = chaves.map(function (k) { return 'data/' + k + '.js'; }).join(', ');
+        return chamarGitHub(r.base + '/git/commits', token, {
+          metodo: 'POST',
+          corpo: {
+            message: 'Atualiza o acervo pelo modo edição\n\nArquivos: ' + lista +
+                     '\nPublicado por: ' + quem,
+            tree: arvore.sha,
+            parents: [shaBase]
+          }
+        });
+      })
+      .then(function (commit) {
+        aoAndar('Publicando…');
+        return chamarGitHub(r.base + '/git/refs/heads/' + encodeURIComponent(r.branch), token, {
+          metodo: 'PATCH',
+          corpo: { sha: commit.sha }
+        }).then(function () { return { sha: commit.sha, quem: quem, arquivos: chaves }; });
+      });
   }
 
   /* ---------------------------------------------------------------------
@@ -407,21 +583,68 @@ window.ACERVO.editor = (function () {
         itens.map(function (it, i) { return itemHtml(estado.colecao, it, i); }).join('') +
       '</div>' +
       (def.lista ? '<button class="botao botao--fantasma ed-novo" type="button">+ Novo item</button>' : '') +
+      blocoPublicar();
+
+    ligarEventos();
+  }
+
+  function textoAlteradas() {
+    var alteradas = colecoesAlteradas();
+    if (!alteradas.length) return 'Nada alterado por enquanto.';
+    return 'Vai num commit só: <code>' +
+      alteradas.map(function (k) { return 'data/' + k + '.js'; }).join('</code> <code>') + '</code>';
+  }
+
+  function blocoPublicar() {
+    var alteradas = colecoesAlteradas();
+    var temToken = !!lerToken();
+    var r = repo();
+
+    return '' +
       '<div class="ed-publicar">' +
         '<p class="ed-publicar__titulo">Publicar para o time</p>' +
-        '<p class="ed-aviso">Gere o arquivo e substitua <code>data/' + estado.colecao +
-          '.js</code> no repositório. O commit é o que publica.</p>' +
+
+        '<p class="ed-aviso" id="ed-alteradas">' + textoAlteradas() + '</p>' +
+
+        (temToken
+          ? '<div class="ed-publicar__acoes">' +
+              '<button class="botao" type="button" data-acao="publicar"' +
+                (alteradas.length ? '' : ' disabled') + '>⬆ Publicar no GitHub</button>' +
+              '<button class="chip" type="button" data-acao="esquecer-token">Esquecer token</button>' +
+            '</div>'
+          : '<details class="ed-token">' +
+              '<summary>Conectar ao GitHub para publicar daqui</summary>' +
+              '<p class="ed-aviso">' +
+                'Um <strong>token com permissão de escrita</strong> neste repositório fica guardado ' +
+                'no seu navegador. Quem puser a mão nele consegue publicar no site. ' +
+                'Crie um <em>fine-grained token</em> restrito: ' +
+                '<strong>só o repositório ' + u.esc(r.owner + '/' + r.repo) + '</strong>, ' +
+                '<strong>só Contents: Read and write</strong>, e com validade curta.' +
+              '</p>' +
+              '<p class="ed-aviso">' +
+                '<a href="https://github.com/settings/personal-access-tokens/new" target="_blank" ' +
+                'rel="noopener">Criar o token no GitHub →</a>' +
+              '</p>' +
+              '<label class="ed-campo"><span class="ed-campo__rotulo">Token</span>' +
+                '<input type="password" id="ed-token" autocomplete="off" ' +
+                'placeholder="github_pat_…"></label>' +
+              '<label class="ed-check"><input type="checkbox" id="ed-lembrar"> ' +
+                'Lembrar neste computador</label>' +
+              '<p class="ed-aviso">Sem marcar, o token some quando você fechar o navegador — ' +
+                'que é o mais seguro em máquina compartilhada.</p>' +
+              '<button class="botao" type="button" data-acao="salvar-token">Guardar token</button>' +
+            '</details>') +
+
+        '<p class="ed-status" id="ed-status" hidden></p>' +
+
+        '<p class="ed-aviso ed-publicar__manual">Ou faça na mão: gere o arquivo e commite você mesmo.</p>' +
         '<div class="ed-publicar__acoes">' +
-          '<button class="botao" type="button" data-acao="baixar">Baixar ' + estado.colecao + '.js</button>' +
-          '<button class="botao botao--fantasma" type="button" data-acao="copiar">Copiar conteúdo</button>' +
-        '</div>' +
-        '<div class="ed-publicar__acoes">' +
+          '<button class="chip" type="button" data-acao="baixar">Baixar ' + estado.colecao + '.js</button>' +
+          '<button class="chip" type="button" data-acao="copiar">Copiar conteúdo</button>' +
           '<button class="chip" type="button" data-acao="trocar-senha">Trocar senha</button>' +
           '<button class="chip" type="button" data-acao="descartar">Descartar rascunho</button>' +
         '</div>' +
       '</div>';
-
-    ligarEventos();
   }
 
   function ligarEventos() {
@@ -508,6 +731,46 @@ window.ACERVO.editor = (function () {
         descartarRascunho();
       }
     });
+    acao('salvar-token', function () {
+      var campo = painel.querySelector('#ed-token');
+      var valor = (campo.value || '').trim();
+      if (!valor) return;
+      guardarToken(valor, painel.querySelector('#ed-lembrar').checked);
+      campo.value = '';
+      desenhar();
+    });
+
+    acao('esquecer-token', function () {
+      esquecerToken();
+      desenhar();
+    });
+
+    acao('publicar', function (botao) {
+      var status = painel.querySelector('#ed-status');
+      var andar = function (texto, classe) {
+        status.hidden = false;
+        status.className = 'ed-status' + (classe ? ' ed-status--' + classe : '');
+        status.innerHTML = texto;
+      };
+
+      botao.disabled = true;
+      publicarNoGitHub(lerToken(), function (t) { andar(t); })
+        .then(function (res) {
+          var url = 'https://github.com/' + repo().owner + '/' + repo().repo +
+                    '/commit/' + res.sha;
+          andar('✅ <strong>Publicado.</strong> ' +
+                '<a href="' + url + '" target="_blank" rel="noopener">Ver o commit</a>. ' +
+                'O site leva cerca de um minuto para reconstruir — até lá você continua ' +
+                'vendo a sua versão, e o aviso de rascunho some sozinho quando o time ' +
+                'passar a ver o mesmo.', 'ok');
+          u.confete(['🚀', '✅', '🎉']);
+        })
+        .catch(function (e) {
+          andar('❌ ' + u.esc(e.message), 'erro');
+          botao.disabled = false;
+        });
+    });
+
     acao('trocar-senha', function () {
       var nova = window.prompt('Nova senha do modo edição:');
       if (!nova) return;
@@ -528,8 +791,9 @@ window.ACERVO.editor = (function () {
     else marcarRascunho();
   }
 
-  // Sinaliza em dois lugares que existe alteração ainda não publicada: o
-  // ponto no lápis (visível com o painel fechado) e o banner dentro dele.
+  // Tudo que depende de "existe alteração não publicada" é atualizado aqui,
+  // sem redesenhar o painel — senão o estado só mudaria ao trocar de aba, e
+  // quem editasse um campo veria o botão Publicar seguir desabilitado.
   function marcarRascunho() {
     var tem = temRascunho();
 
@@ -538,6 +802,12 @@ window.ACERVO.editor = (function () {
 
     var banner = document.getElementById('ed-rascunho');
     if (banner) banner.hidden = !tem;
+
+    var lista = document.getElementById('ed-alteradas');
+    if (lista) lista.innerHTML = textoAlteradas();
+
+    var publicar = document.querySelector('[data-acao="publicar"]');
+    if (publicar) publicar.disabled = !tem;
   }
 
   /* ---------------------------------------------------------------------
