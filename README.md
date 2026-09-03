@@ -31,6 +31,22 @@ O design system é a base, não uma camisa de força: onde o acervo se afasta
 dele (o easter egg, o confete, as pimentas de absurdo), há um comentário no
 CSS explicando por quê.
 
+### Galeria em visão infinita
+
+A galeria abre num plano que se repete nos quatro sentidos: arraste (mouse,
+toque ou trackpad) para percorrer, clique em qualquer item para abrir a
+ficha completa. Por baixo são 3×3 cópias da mesma malha, e o deslocamento
+volta por módulo — daí a sensação de não ter fim nem borda.
+
+Arraste e clique convivem: um movimento acima de 8px conta como arraste e
+não abre a ficha. Como o ponteiro fica capturado pela caixa durante o
+arraste, o clique é resolvido no `pointerup` via `elementFromPoint`, e não
+por um listener em cada item — um listener ali nunca receberia o evento.
+
+O botão **ver em grade** mostra a mesma coleção em lista normal. Ele não é
+enfeite: a visão infinita é feita para mouse e toque, e a grade é o caminho
+de quem navega por teclado.
+
 ### Layout da home
 
 A home segue o formato de site de índice/catálogo: tipografia grande na
@@ -67,19 +83,13 @@ momentos, galeria, prêmios, o time e os ajustes gerais.
 
 O acervo é um site estático, sem servidor próprio. Mesmo assim o painel
 publica para o time em um clique: ele commita os arquivos alterados direto
-pela API do GitHub.
+pela API do GitHub, num **único commit**.
 
-1. você edita no painel e vê o resultado na página na hora;
-2. o rascunho fica salvo **só no seu navegador** — ninguém mais vê;
-3. **⬆ Publicar no GitHub** manda todos os arquivos alterados num **único
-   commit**;
-4. o Pages reconstrói e, em cerca de um minuto, o time vê a alteração.
-
-Enquanto o site publicado não alcança o seu rascunho, um ponto amarelo fica
-no ✏️ e um aviso aparece no painel. **Você não precisa limpar nada**: no
-primeiro carregamento em que o arquivo publicado bater com o rascunho, ele
-se apaga sozinho e o aviso some. *Descartar rascunho* volta tudo ao que está
-no ar imediatamente.
+**Não existe rascunho salvo no navegador.** A alteração vive só na aba
+aberta: ou vira commit, ou se perde ao recarregar. É de propósito — sem
+isso, alguém acabaria navegando numa versão particular do acervo achando
+que o time vê a mesma coisa. Se houver alteração pendente, o navegador
+avisa antes de fechar ou recarregar.
 
 Sem token, o caminho manual continua: **Baixar** ou **Copiar conteúdo**
 entrega o `data/<arquivo>.js` pronto para commitar na mão.
@@ -129,21 +139,23 @@ A verificação usa a Web Crypto, que o navegador só libera em `https` ou
 
 | Seção | Endereço | O que vai lá |
 |---|---|---|
-| Início | `#/` | Abertura editorial, letreiro de frases, placar em bento, frase do dia, quiz, mosaico de fotos e últimos registros |
-| Frases | `#/frases` | Todas as pérolas, com busca e filtro por pessoa |
-| Galeria | `#/galeria` | Fotos, prints e vídeos, com lightbox |
-| Momentos | `#/momentos` | Linha do tempo dos causos históricos |
-| Hall da Fama | `#/hall` | Troféus honoríficos |
-| O Time | `#/time` | Perfis com cargo oficial, cargo honorífico e ficha corrida |
+| Início | `#/` | Abertura editorial, letreiro de frases, placar em bento, frase do dia, quiz, mosaico e pódio |
+| Acervo | `#/acervo` | Índice de pastas — uma por integrante |
+| Pasta | `#/acervo/<id>` | A ficha da pessoa: dados, falas, imagens e troféus |
+| Galeria | `#/galeria` | Visão infinita, com alternativa em grade |
+| Hall da Fama | `#/hall` | Ranking automático por pérolas registradas |
+| O Time | `#/time` | Cards do time com cargo oficial e honorífico |
+
+Endereços antigos (`#/frases`, `#/time/<id>`) redirecionam sozinhos para os
+lugares novos — links salvos continuam funcionando.
 
 ## Adicionando conteúdo
 
 1. Abra o arquivo certo dentro de `data/`:
    - `time.js` — as pessoas do time (já cadastradas, com foto)
-   - `frases.js` — as pérolas ditas
-   - `momentos.js` — os causos da linha do tempo
+   - `frases.js` — as pérolas ditas (alimentam o ranking do Hall da Fama)
    - `galeria.js` — fotos e prints
-   - `premios.js` — troféus do Hall da Fama
+   - `premios.js` — troféus pontuais (a seção só aparece se houver algum)
    - `config.js` — nome do site, subtítulos, textos gerais
 2. Copie um bloco que já existe, cole logo abaixo e edite o conteúdo.
    A única regra: **vírgula entre um bloco e outro**.

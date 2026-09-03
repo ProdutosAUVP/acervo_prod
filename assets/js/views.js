@@ -16,7 +16,6 @@ window.ACERVO.views = (function () {
       config: window.ACERVO.config || {},
       time: window.ACERVO.time || [],
       frases: window.ACERVO.frases || [],
-      momentos: window.ACERVO.momentos || [],
       galeria: window.ACERVO.galeria || [],
       premios: window.ACERVO.premios || []
     };
@@ -32,7 +31,7 @@ window.ACERVO.views = (function () {
         (f.contexto ? '<p class="frase__contexto">' + u.esc(f.contexto) + '</p>' : '') +
         '<div class="frase__rodape">' +
           u.avatar(p) +
-          '<a href="#/time/' + u.esc(p.id) + '">' +
+          '<a href="#/acervo/' + u.esc(p.id) + '">' +
             '<span class="frase__autor">' + u.esc(p.nome) + '</span><br>' +
             '<span class="frase__data">' + u.esc(u.dataLegivel(f.data)) + '</span>' +
           '</a>' +
@@ -75,22 +74,6 @@ window.ACERVO.views = (function () {
       '</button>';
   }
 
-  function cardMomento(m) {
-    var pessoas = (m.envolvidos || []).map(u.linkPessoa).join(' ');
-    return '' +
-      '<article class="momento tipo-' + u.esc(m.tipo || 'caos') + '">' +
-        '<div class="momento__topo">' +
-          '<h3>' + u.esc(m.titulo) + '</h3>' +
-          '<span class="selo">' + u.esc(m.tipo || 'caos') + '</span>' +
-          (m.gravidade ? '<span title="Gravidade ' + u.esc(m.gravidade) + '/5">' +
-                         u.pimenta(m.gravidade) + '</span>' : '') +
-        '</div>' +
-        '<div class="momento__data">' + u.esc(u.dataLegivel(m.data)) + '</div>' +
-        '<p class="momento__relato">' + u.esc(m.relato) + '</p>' +
-        (pessoas ? '<div class="momento__pessoas">' + pessoas + '</div>' : '') +
-      '</article>';
-  }
-
   function cardPremio(pr) {
     var p = u.pessoa(pr.ganhador);
     return '' +
@@ -99,7 +82,7 @@ window.ACERVO.views = (function () {
         '<h3 class="premio__titulo">' + u.esc(pr.titulo) + '</h3>' +
         '<p class="premio__descricao">' + u.esc(pr.descricao || '') + '</p>' +
         '<div class="premio__ganhador">' + u.avatar(p) +
-          '<a href="#/time/' + u.esc(p.id) + '"><strong>' + u.esc(p.nome) + '</strong></a>' +
+          '<a href="#/acervo/' + u.esc(p.id) + '"><strong>' + u.esc(p.nome) + '</strong></a>' +
           '<span class="selo">' + u.esc(pr.edicao || '') + '</span>' +
         '</div>' +
         (pr.motivo ? '<p class="premio__motivo">' + u.esc(pr.motivo) + '</p>' : '') +
@@ -115,7 +98,7 @@ window.ACERVO.views = (function () {
     }).length;
 
     return '' +
-      '<a class="pessoa ' + u.acento(p) + '" href="#/time/' + u.esc(p.id) + '">' +
+      '<a class="pessoa ' + u.acento(p) + '" href="#/acervo/' + u.esc(p.id) + '">' +
         '<div class="pessoa__topo">' + u.avatar(p) +
           '<div><div class="pessoa__nome">' + u.esc(p.nome) + '</div>' +
           '<div class="pessoa__cargo">' + u.esc(p.cargo || '') + '</div></div>' +
@@ -205,12 +188,24 @@ window.ACERVO.views = (function () {
       '</section>';
   }
 
+  // Os três primeiros do ranking, para o pódio da home. Só devolve quem
+  // tem pelo menos uma pérola: pódio com zero não é pódio.
+  function liderDoRanking() {
+    var d = dados();
+    var lista = d.time.map(function (p) {
+      return { p: p, frases: d.frases.filter(function (f) { return f.autor === p.id; }).length };
+    }).filter(function (r) { return r.frases > 0; })
+      .sort(function (a, b) { return b.frases - a.frases; })
+      .slice(0, 3);
+    return lista.length ? lista : null;
+  }
+
   function home() {
     var d = dados();
     var frasesOrdenadas = u.ordenarPorData(d.frases);
     var destaque = u.doDia(frasesOrdenadas);
     var ultimasFrases = frasesOrdenadas.slice(0, 3);
-    var ultimosMomentos = u.ordenarPorData(d.momentos).slice(0, 2);
+    var lider = liderDoRanking();
     var fotos = u.ordenarPorData(d.galeria).slice(0, 5);
     var img = d.config.destaque || {};
 
@@ -250,9 +245,9 @@ window.ACERVO.views = (function () {
           '<a class="bento__item" href="#/galeria">' +
             '<div class="bento__numero">' + d.galeria.length + '</div>' +
             '<div class="bento__rotulo">evidências</div></a>' +
-          '<a class="bento__item" href="#/momentos">' +
-            '<div class="bento__numero">' + d.momentos.length + '</div>' +
-            '<div class="bento__rotulo">momentos</div></a>' +
+          '<a class="bento__item" href="#/acervo">' +
+            '<div class="bento__numero">' + d.time.length + '</div>' +
+            '<div class="bento__rotulo">pastas</div></a>' +
           '<a class="bento__item" href="#/hall">' +
             '<div class="bento__numero">' + d.premios.length + '</div>' +
             '<div class="bento__rotulo">troféus</div></a>' +
@@ -302,119 +297,311 @@ window.ACERVO.views = (function () {
           : u.vazio('Nenhuma frase ainda.', 'Abra o modo edição (✏️) e registre a primeira.')) +
       '</section>' +
 
-      '<section class="secao revelar">' +
-        tituloSecao('06', 'Acontecimentos', '<a href="#/momentos">linha do tempo →</a>') +
-        (ultimosMomentos.length
-          ? '<div class="linha-tempo">' + ultimosMomentos.map(cardMomento).join('') + '</div>'
-          : u.vazio('A história ainda não começou.', 'Registre o primeiro causo no modo edição (✏️).')) +
-      '</section>';
+      (lider
+        ? '<section class="secao revelar">' +
+            tituloSecao('06', 'Quem mais rendeu', '<a href="#/hall">ranking completo →</a>') +
+            '<div class="podio">' +
+              lider.map(function (r, i) {
+                return '<a class="podio__lugar ' + u.acento(r.p) + '" href="#/acervo/' +
+                  u.esc(r.p.id) + '">' +
+                  '<span class="podio__medalha">' + ['🥇', '🥈', '🥉'][i] + '</span>' +
+                  u.avatar(r.p, i === 0) +
+                  '<strong>' + u.esc(r.p.nome.split(' ')[0]) + '</strong>' +
+                  '<span>' + u.plural(r.frases, 'pérola', 'pérolas') + '</span>' +
+                '</a>';
+              }).join('') +
+            '</div>' +
+          '</section>'
+        : '');
 
     return html;
   }
 
-  function frases(estado) {
-    var d = dados();
-    var lista = u.ordenarPorData(d.frases);
-    var busca = u.normalizar(estado.busca || '');
-    var autor = estado.autor || '';
+  /* --- Acervo: uma pasta por integrante ------------------------------
+     No lugar da lista solta de frases, o conteúdo passa a ser organizado
+     por pessoa, como uma gaveta de fichas: o índice lista as pastas e cada
+     pasta reúne tudo que existe sobre aquele integrante. */
 
-    var filtradas = lista.filter(function (f) {
-      if (autor && f.autor !== autor) return false;
+  function fichaDe(id) {
+    var d = dados();
+    return {
+      frases: u.ordenarPorData(d.frases.filter(function (f) { return f.autor === id; })),
+      imagens: u.ordenarPorData(d.galeria.filter(function (g) {
+        return (g.aparecem || []).indexOf(id) !== -1;
+      })),
+      premios: d.premios.filter(function (x) { return x.ganhador === id; })
+    };
+  }
+
+  function acervo(estado) {
+    var d = dados();
+    var busca = u.normalizar(estado.busca || '');
+
+    var pastas = d.time.map(function (p, i) {
+      var f = fichaDe(p.id);
+      return {
+        p: p,
+        numero: ('0' + (i + 1)).slice(-2),
+        total: f.frases.length + f.imagens.length + f.premios.length,
+        f: f
+      };
+    }).filter(function (x) {
       if (!busca) return true;
       var alvo = u.normalizar([
-        f.texto, f.contexto, (f.tags || []).join(' '), u.pessoa(f.autor).nome
+        x.p.nome, x.p.cargo, x.p.titulo, x.p.bio,
+        x.f.frases.map(function (i) { return i.texto; }).join(' '),
+        x.f.imagens.map(function (i) { return i.legenda; }).join(' ')
       ].join(' '));
       return alvo.indexOf(busca) !== -1;
     });
 
-    var chips = '<button class="chip" data-filtro-autor="" aria-pressed="' + (!autor) + '">todo mundo</button>' +
-      d.time.map(function (p) {
-        var icone = p.foto
-          ? '<img class="chip__foto" src="' + u.esc(p.foto) + '" alt="" loading="lazy" ' +
-            'data-fallback="' + u.esc(p.emoji || '👤') + '">'
-          : u.esc(p.emoji || '👤');
-        return '<button class="chip" data-filtro-autor="' + u.esc(p.id) + '" aria-pressed="' +
-               (autor === p.id) + '">' + icone + ' ' + u.esc(p.nome.split(' ')[0]) + '</button>';
-      }).join('');
-
     return '' +
       '<header class="cabecalho-pagina">' +
-        '<h1>Frases</h1>' +
-        '<p>Pérolas ditas em voz alta, na frente de testemunhas. ' +
-        'Nenhuma foi editada para ficar mais bonita.</p>' +
+        '<span class="etiqueta">Índice de pastas</span>' +
+        '<h1>Acervo</h1>' +
+        '<p>Uma pasta por integrante. Cada uma reúne tudo que o time conseguiu ' +
+        'registrar sobre a pessoa: falas, imagens e o que mais aparecer.</p>' +
       '</header>' +
+
       '<div class="barra-filtros">' +
-        '<input class="busca" id="busca-frases" type="search" placeholder="Buscar frase, contexto ou pessoa…" ' +
-        'value="' + u.esc(estado.busca || '') + '">' +
-        chips +
+        '<input class="busca" id="busca-acervo" type="search" ' +
+        'placeholder="Buscar por pessoa, frase ou legenda…" value="' + u.esc(estado.busca || '') + '">' +
       '</div>' +
-      '<p class="contagem">' + u.plural(filtradas.length, 'frase encontrada', 'frases encontradas') + '</p>' +
-      (filtradas.length
-        ? '<div class="grade-frases">' + filtradas.map(cardFrase).join('') + '</div>'
-        : u.vazio('Nenhuma frase com esse filtro.', 'Ou ninguém falou besteira sobre isso ainda, o que é improvável.'));
+
+      (pastas.length
+        ? '<ol class="pastas">' + pastas.map(function (x) {
+            return '<li><a class="pasta ' + u.acento(x.p) + '" href="#/acervo/' + u.esc(x.p.id) + '">' +
+              '<span class="pasta__num">' + x.numero + '</span>' +
+              u.avatar(x.p) +
+              '<span class="pasta__nome">' +
+                '<strong>' + u.esc(x.p.nome) + '</strong>' +
+                '<small>' + u.esc(x.p.titulo || x.p.cargo || '') + '</small>' +
+              '</span>' +
+              '<span class="pasta__contas">' +
+                '<span>' + x.f.frases.length + ' <em>falas</em></span>' +
+                '<span>' + x.f.imagens.length + ' <em>imagens</em></span>' +
+              '</span>' +
+              '<span class="pasta__seta" aria-hidden="true">→</span>' +
+            '</a></li>';
+          }).join('') + '</ol>'
+        : u.vazio('Nenhuma pasta com esse filtro.', 'Tente outro nome ou trecho de frase.'));
   }
 
+  // A pasta aberta: cabeçalho de ficha, dados em linhas rotuladas e o
+  // material reunido embaixo.
+  function pasta(id) {
+    var d = dados();
+    var p = null, indice = -1;
+    for (var i = 0; i < d.time.length; i++) {
+      if (d.time[i].id === id) { p = d.time[i]; indice = i; }
+    }
+    if (!p) {
+      return '<a class="voltar" href="#/acervo">← voltar ao índice</a>' +
+             u.vazio('Não existe pasta com esse nome.', 'Confira o índice do acervo.');
+    }
+
+    var f = fichaDe(id);
+    var vizinho = d.time[(indice + 1) % d.time.length];
+    window.ACERVO._galeriaAtual = f.imagens;
+
+    var linha = function (rotulo, valor) {
+      if (!valor) return '';
+      return '<div class="ficha__linha"><dt>' + u.esc(rotulo) + '</dt><dd>' + valor + '</dd></div>';
+    };
+
+    var html = '' +
+      '<a class="voltar" href="#/acervo">← índice do acervo</a>' +
+
+      '<header class="ficha ' + u.acento(p) + '">' +
+        '<div class="ficha__id">' +
+          '<span class="etiqueta">Pasta ' + ('0' + (indice + 1)).slice(-2) + '</span>' +
+          '<h1>' + u.esc(p.nome) + '</h1>' +
+          (p.titulo ? '<p class="ficha__titulo">' + u.esc(p.titulo) + '</p>' : '') +
+        '</div>' +
+        u.avatar(p, true) +
+      '</header>' +
+
+      '<dl class="ficha__dados">' +
+        linha('Cargo', u.esc(p.cargo || '—')) +
+        linha('No time desde', u.esc(p.entrouEm || '—')) +
+        linha('Falas registradas', f.frases.length) +
+        linha('Imagens', f.imagens.length) +
+        linha('Troféus', f.premios.length) +
+        linha('Sobre', u.esc(p.bio || '—')) +
+        ((p.bordoes || []).length
+          ? linha('Bordões', p.bordoes.map(function (b) {
+              return '<span class="selo">“' + u.esc(b) + '”</span>';
+            }).join(' '))
+          : '') +
+      '</dl>';
+
+    if (f.frases.length) {
+      html += '<section class="secao">' +
+        tituloSecao('A', 'Falas registradas') +
+        '<div class="grade-frases">' + f.frases.map(cardFrase).join('') + '</div>' +
+      '</section>';
+    }
+
+    if (f.imagens.length) {
+      html += '<section class="secao">' +
+        tituloSecao('B', 'Imagens') +
+        '<div class="grade-galeria">' +
+          f.imagens.map(function (item, i) { return cardFoto(item, i); }).join('') +
+        '</div>' +
+      '</section>';
+    }
+
+    if (f.premios.length) {
+      html += '<section class="secao">' +
+        tituloSecao('C', 'Troféus') +
+        '<div class="grade-premios">' + f.premios.map(cardPremio).join('') + '</div>' +
+      '</section>';
+    }
+
+    if (!f.frases.length && !f.imagens.length && !f.premios.length) {
+      html += u.vazio('Pasta vazia. Por enquanto.',
+                      'Nada registrado sobre ' + p.nome.split(' ')[0] + ' ainda. É questão de tempo.');
+    }
+
+    html += '<a class="proxima ' + u.acento(vizinho) + '" href="#/acervo/' + u.esc(vizinho.id) + '">' +
+              '<span class="etiqueta">Próxima pasta</span>' +
+              '<strong>' + u.esc(vizinho.nome) + ' →</strong>' +
+            '</a>';
+
+    return html;
+  }
+
+  /* --- Galeria: visão infinita ---------------------------------------
+     O plano de fundo é uma malha que se repete nos quatro sentidos; o
+     arraste move a malha e ela se reposiciona por módulo, então nunca
+     acaba. O botão alterna para a grade normal, que é o caminho de quem
+     navega por teclado ou prefere ver tudo de uma vez. */
   function galeria(estado) {
     var d = dados();
     var lista = u.ordenarPorData(d.galeria);
-    var busca = u.normalizar(estado.busca || '');
+    window.ACERVO._galeriaAtual = lista;
 
-    // Guarda a lista atual para o lightbox saber o que abrir
-    window.ACERVO._galeriaAtual = lista.filter(function (item) {
-      if (!busca) return true;
-      var alvo = u.normalizar([
-        item.legenda, (item.tags || []).join(' '),
-        (item.aparecem || []).map(function (id) { return u.pessoa(id).nome; }).join(' ')
-      ].join(' '));
-      return alvo.indexOf(busca) !== -1;
-    });
-
-    var visiveis = window.ACERVO._galeriaAtual;
-
-    return '' +
+    var cabecalho = '' +
       '<header class="cabecalho-pagina">' +
+        '<span class="etiqueta">' + u.plural(lista.length, 'registro visual', 'registros visuais') + '</span>' +
         '<h1>Galeria</h1>' +
-        '<p>Fotos, prints e provas materiais. Clique para ampliar a vergonha.</p>' +
+        '<p>Arraste para percorrer. Clique em qualquer item para ver a ficha completa.</p>' +
       '</header>' +
       '<div class="barra-filtros">' +
-        '<input class="busca" id="busca-galeria" type="search" placeholder="Buscar por legenda, pessoa ou tag…" ' +
-        'value="' + u.esc(estado.busca || '') + '">' +
+        '<button class="chip" data-acao="modo-galeria" aria-pressed="' +
+          (estado.modo === 'grade') + '">' +
+          (estado.modo === 'grade' ? '⤢ visão infinita' : '▦ ver em grade') +
+        '</button>' +
+      '</div>';
+
+    if (!lista.length) {
+      return cabecalho + u.vazio('Sem imagens por aqui.',
+        'Suba os arquivos em assets/img/galeria/ e cadastre no modo edição (✏️).');
+    }
+
+    if (estado.modo === 'grade') {
+      return cabecalho +
+        '<div class="grade-galeria">' +
+          lista.map(function (item, i) { return cardFoto(item, i); }).join('') +
+        '</div>';
+    }
+
+    // Nove cópias da malha (3x3): o arraste nunca alcança a borda
+    var celulas = lista.map(function (item, i) {
+      return '<button class="inf__item" type="button" data-foto="' + i + '" ' +
+             'tabindex="-1" aria-hidden="true">' + midiaDaGaleria(item) + '</button>';
+    }).join('');
+
+    var malha = '<div class="inf__malha">' + celulas + '</div>';
+    var copias = '';
+    for (var linha = 0; linha < 3; linha++) {
+      for (var col = 0; col < 3; col++) copias += malha;
+    }
+
+    return cabecalho +
+      '<div class="inf" id="inf">' +
+        '<div class="inf__plano" id="inf-plano">' + copias + '</div>' +
+        '<p class="inf__dica" aria-hidden="true">arraste para explorar · clique para abrir</p>' +
       '</div>' +
-      (visiveis.length
-        ? '<div class="grade-galeria">' + visiveis.map(cardFoto).join('') + '</div>'
-        : u.vazio('Sem imagens por aqui.', 'Suba os arquivos em assets/img/galeria/ e cadastre em data/galeria.js.'));
+      '<p class="contagem">A visão infinita é feita para o mouse e o toque. ' +
+      'Para navegar pelo teclado, use <button class="ligacao" data-acao="modo-galeria">ver em grade</button>.</p>';
   }
 
-  function momentos() {
-    var d = dados();
-    var lista = u.ordenarPorData(d.momentos);
-    return '' +
-      '<header class="cabecalho-pagina">' +
-        '<h1>Linha do tempo</h1>' +
-        '<p>Os acontecimentos que moldaram este time — para o bem e, principalmente, para o mal.</p>' +
-      '</header>' +
-      (lista.length
-        ? '<div class="linha-tempo">' + lista.map(cardMomento).join('') + '</div>'
-        : u.vazio('A história ainda não começou.', 'Registre o primeiro causo em data/momentos.js.'));
-  }
-
+  /* --- Hall da Fama: ranking por pérolas registradas ------------------ */
   function hall() {
     var d = dados();
-    return '' +
+
+    var ranking = d.time.map(function (p) {
+      var f = fichaDe(p.id);
+      return { p: p, frases: f.frases.length, imagens: f.imagens.length };
+    }).sort(function (a, b) {
+      if (b.frases !== a.frases) return b.frases - a.frases;
+      return b.imagens - a.imagens;
+    });
+
+    var maior = ranking.length ? ranking[0].frases : 0;
+    var totalFrases = d.frases.length;
+
+    // Posição com empate: quem tem o mesmo número divide o lugar
+    var posicao = 0, anterior = null;
+    ranking.forEach(function (r, i) {
+      if (r.frases !== anterior) { posicao = i + 1; anterior = r.frases; }
+      r.pos = posicao;
+    });
+
+    var medalha = function (pos, frases) {
+      if (!frases) return '·';
+      return pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : pos;
+    };
+
+    var html = '' +
       '<header class="cabecalho-pagina">' +
+        '<span class="etiqueta">Classificação ao vivo</span>' +
         '<h1>Hall da Fama</h1>' +
-        '<p>Prêmios honoríficos entregues por mérito absolutamente questionável. ' +
-        'Não há recurso.</p>' +
-      '</header>' +
-      (d.premios.length
-        ? '<div class="grade-premios">' + d.premios.map(cardPremio).join('') + '</div>'
-        : u.vazio('Nenhum troféu entregue.', 'Crie a primeira categoria em data/premios.js.'));
+        '<p>Quem mais rendeu pérola para o acervo. A tabela se refaz sozinha a cada ' +
+        'frase registrada — ninguém escolhe, ninguém vota. ' +
+        (totalFrases ? 'Hoje são ' + u.plural(totalFrases, 'fala arquivada', 'falas arquivadas') + '.' : '') +
+        '</p>' +
+      '</header>';
+
+    if (!totalFrases) {
+      return html + u.vazio('O ranking está zerado.',
+        'Registre a primeira frase e a classificação começa a se mexer.');
+    }
+
+    html += '<ol class="ranking">' + ranking.map(function (r) {
+      var largura = maior ? Math.round(r.frases / maior * 100) : 0;
+      return '<li class="ranking__linha ' + u.acento(r.p) + (r.frases ? '' : ' ranking__linha--zero') + '">' +
+        '<span class="ranking__pos">' + medalha(r.pos, r.frases) + '</span>' +
+        u.avatar(r.p) +
+        '<a class="ranking__nome" href="#/acervo/' + u.esc(r.p.id) + '">' +
+          '<strong>' + u.esc(r.p.nome) + '</strong>' +
+          '<small>' + u.esc(r.p.titulo || r.p.cargo || '') + '</small>' +
+        '</a>' +
+        '<span class="ranking__barra"><span style="width:' + largura + '%"></span></span>' +
+        '<span class="ranking__conta">' + r.frases + '</span>' +
+      '</li>';
+    }).join('') + '</ol>';
+
+    if (d.premios.length) {
+      html += '<section class="secao" style="margin-top:44px">' +
+        tituloSecao('★', 'Troféus entregues') +
+        '<div class="grade-premios">' + d.premios.map(cardPremio).join('') + '</div>' +
+      '</section>';
+    } else {
+      html += '<p class="contagem" style="margin-top:32px">' +
+        'Os troféus pontuais entram aqui quando o time criar as categorias. ' +
+        'Por ora, o ranking fala sozinho.</p>';
+    }
+
+    return html;
   }
 
   function time() {
     var d = dados();
     return '' +
       '<header class="cabecalho-pagina">' +
+        '<span class="etiqueta">' + d.time.length + ' pessoas</span>' +
         '<h1>Os suspeitos</h1>' +
         '<p>Nove pessoas, nove cargos oficiais e nove cargos de verdade. ' +
         'Todo o conteúdo deste acervo é responsabilidade de alguém aqui embaixo — ' +
@@ -423,79 +610,6 @@ window.ACERVO.views = (function () {
       (d.time.length
         ? '<div class="grade-time">' + d.time.map(cardPessoa).join('') + '</div>'
         : u.vazio('Time vazio.', 'Cadastre as pessoas em data/time.js.'));
-  }
-
-  function perfil(id) {
-    var d = dados();
-    var p = null;
-    for (var i = 0; i < d.time.length; i++) {
-      if (d.time[i].id === id) { p = d.time[i]; break; }
-    }
-    if (!p) {
-      return '<a class="voltar" href="#/time">← voltar para o time</a>' +
-             u.vazio('Não achamos essa pessoa.', 'Ou ela nunca existiu, ou apagaram os rastros.');
-    }
-
-    var minhasFrases = u.ordenarPorData(d.frases.filter(function (f) { return f.autor === p.id; }));
-    var meusPremios = d.premios.filter(function (x) { return x.ganhador === p.id; });
-    var meusMomentos = u.ordenarPorData(d.momentos.filter(function (m) {
-      return (m.envolvidos || []).indexOf(p.id) !== -1;
-    }));
-    var minhasFotos = u.ordenarPorData(d.galeria.filter(function (g) {
-      return (g.aparecem || []).indexOf(p.id) !== -1;
-    }));
-    window.ACERVO._galeriaAtual = minhasFotos;
-
-    var bordoes = (p.bordoes || []).map(function (b) {
-      return '<span class="selo">“' + u.esc(b) + '”</span>';
-    }).join('');
-
-    var html = '' +
-      '<a class="voltar" href="#/time">← voltar para o time</a>' +
-      '<section class="perfil ' + u.acento(p) + '">' +
-        u.avatar(p, true) +
-        '<div class="perfil__info">' +
-          '<h1>' + u.esc(p.nome) + '</h1>' +
-          (p.titulo ? '<span class="selo selo--acento">' + u.esc(p.titulo) + '</span>' : '') +
-          '<p class="pessoa__cargo">' + u.esc(p.cargo || '') +
-          (p.entrouEm ? ' · no time desde ' + u.esc(p.entrouEm) : '') + '</p>' +
-          '<p>' + u.esc(p.bio || '') + '</p>' +
-          (bordoes ? '<div class="perfil__bordoes">' + bordoes + '</div>' : '') +
-        '</div>' +
-      '</section>' +
-
-      '<section class="placar">' +
-        '<div class="placar__item"><div class="placar__numero">' + minhasFrases.length + '</div>' +
-          '<div class="placar__rotulo">frases</div></div>' +
-        '<div class="placar__item"><div class="placar__numero">' + meusPremios.length + '</div>' +
-          '<div class="placar__rotulo">troféus</div></div>' +
-        '<div class="placar__item"><div class="placar__numero">' + meusMomentos.length + '</div>' +
-          '<div class="placar__rotulo">momentos</div></div>' +
-        '<div class="placar__item"><div class="placar__numero">' + minhasFotos.length + '</div>' +
-          '<div class="placar__rotulo">aparições</div></div>' +
-      '</section>';
-
-    if (meusPremios.length) {
-      html += '<section class="secao"><h2>Troféus</h2>' +
-              '<div class="grade-premios">' + meusPremios.map(cardPremio).join('') + '</div></section>';
-    }
-    if (minhasFrases.length) {
-      html += '<section class="secao"><h2>Pérolas registradas</h2>' +
-              '<div class="grade-frases">' + minhasFrases.map(cardFrase).join('') + '</div></section>';
-    }
-    if (meusMomentos.length) {
-      html += '<section class="secao"><h2>Envolvimento em episódios</h2>' +
-              '<div class="linha-tempo">' + meusMomentos.map(cardMomento).join('') + '</div></section>';
-    }
-    if (minhasFotos.length) {
-      html += '<section class="secao"><h2>Aparições</h2>' +
-              '<div class="grade-galeria">' + minhasFotos.map(cardFoto).join('') + '</div></section>';
-    }
-    if (!meusPremios.length && !minhasFrases.length && !meusMomentos.length && !minhasFotos.length) {
-      html += u.vazio('Ficha limpa. Por enquanto.', 'É só questão de tempo.');
-    }
-
-    return html;
   }
 
   function comoContribuir() {
@@ -510,7 +624,6 @@ window.ACERVO.views = (function () {
         '<ul>' +
           '<li><code>data/time.js</code> — as pessoas do time</li>' +
           '<li><code>data/frases.js</code> — as pérolas ditas</li>' +
-          '<li><code>data/momentos.js</code> — os causos da linha do tempo</li>' +
           '<li><code>data/galeria.js</code> — fotos e prints</li>' +
           '<li><code>data/premios.js</code> — troféus do Hall da Fama</li>' +
         '</ul>' +
@@ -566,17 +679,16 @@ window.ACERVO.views = (function () {
 
   return {
     home: home,
-    frases: frases,
+    acervo: acervo,
+    pasta: pasta,
     galeria: galeria,
-    momentos: momentos,
     hall: hall,
     time: time,
-    perfil: perfil,
     comoContribuir: comoContribuir,
     naoEncontrada: naoEncontrada,
+    cardFrase: cardFrase,
     midiaDaGaleria: midiaDaGaleria,
     quiz: quiz,
-    tituloSecao: tituloSecao,
-    cardFrase: cardFrase
+    tituloSecao: tituloSecao
   };
 })();

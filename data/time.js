@@ -64,9 +64,9 @@ window.ACERVO.time = [
     id: 'armando',
     nome: 'Armando Neto',
     cargo: 'Designer de Produto',
-    titulo: 'O da Juba',
+    titulo: 'O Sósia do Fiuk',
     bio: 'Faz interface bonita e que funciona, o que já seria bastante. Ainda por ' +
-         'cima tem o cabelo mais reconhecível do andar — metade do acervo é sósia dele.',
+         'cima carrega a semelhança que rendeu meia dúzia de prints neste acervo.',
     emoji: '🦁',
     foto: 'assets/img/pessoas/armando.png',
     bordoes: []

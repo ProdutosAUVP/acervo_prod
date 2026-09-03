@@ -932,51 +932,258 @@ a.selo:hover { border-color: hsl(var(--acento, var(--ring))); color: hsl(var(--f
   display: flex; gap: 6px; flex-wrap: wrap;
 }
 
-/* Momentos (linha do tempo) */
-.linha-tempo { position: relative; padding-left: 30px; }
-.linha-tempo::before {
-  content: '';
-  position: absolute; left: 7px; top: 10px; bottom: 10px;
-  width: 2px;
-  background: hsl(var(--border));
+/* Pódio da home */
+.podio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.podio__lugar {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 22px 14px;
+  border: 1px solid hsl(var(--border));
+  border-top: 3px solid hsl(var(--acento, var(--primary)));
+  border-radius: var(--radius);
+  background: hsl(var(--card));
+  text-align: center;
+  transition: var(--anima);
+}
+.podio__lugar:hover { transform: translateY(-3px); box-shadow: var(--sombra-2); }
+.podio__medalha { font-size: 1.5rem; line-height: 1; }
+.podio__lugar strong { font-family: var(--font-display); font-size: 1.05rem; }
+.podio__lugar span:last-child { font-family: var(--font-ui); font-size: .74rem; color: hsl(var(--muted-foreground)); }
+@media (max-width: 560px) { .podio { grid-template-columns: 1fr; } }
+
+/* Etiqueta de seção, no espírito de ficha de arquivo */
+.etiqueta {
+  display: inline-block;
+  font-family: var(--font-ui);
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: hsl(var(--muted-foreground));
+  margin-bottom: 8px;
 }
 
-.momento {
-  position: relative;
-  margin-bottom: 16px;
-  padding: 20px 22px;
+/* ============ Acervo: índice de pastas ============ */
+.pastas { list-style: none; margin: 0; padding: 0; border-top: 1px solid hsl(var(--border)); }
+
+.pasta {
+  display: grid;
+  grid-template-columns: auto auto 1fr auto auto;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 12px;
+  border-bottom: 1px solid hsl(var(--border));
+  color: inherit;
+  transition: var(--anima);
+}
+.pasta:hover {
+  background: hsl(var(--acento, var(--primary)) / .07);
+  padding-left: 20px;
+}
+.pasta__num {
+  font-family: var(--font-ui);
+  font-size: .72rem;
+  font-weight: 700;
+  color: hsl(var(--acento, var(--muted-foreground)));
+  min-width: 22px;
+}
+.pasta__nome { display: flex; flex-direction: column; min-width: 0; }
+.pasta__nome strong { font-family: var(--font-display); font-size: 1.15rem; line-height: 1.2; }
+.pasta__nome small { font-family: var(--font-ui); font-size: .76rem; color: hsl(var(--muted-foreground)); }
+.pasta__contas {
+  display: flex; gap: 16px;
+  font-family: var(--font-ui);
+  font-size: .8rem;
+  color: hsl(var(--foreground));
+}
+.pasta__contas em { font-style: normal; color: hsl(var(--muted-foreground)); font-size: .72rem; }
+.pasta__seta { color: hsl(var(--muted-foreground)); transition: var(--anima); }
+.pasta:hover .pasta__seta { transform: translateX(4px); color: hsl(var(--acento, var(--primary))); }
+
+@media (max-width: 720px) {
+  .pasta { grid-template-columns: auto auto 1fr auto; gap: 12px; }
+  .pasta__contas { display: none; }
+}
+
+/* ============ Pasta aberta: a ficha ============ */
+.ficha {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 24px; flex-wrap: wrap;
+  padding-bottom: 22px;
+  border-bottom: 3px solid hsl(var(--acento, var(--primary)));
+  margin-bottom: 0;
+}
+.ficha__id { min-width: 0; }
+.ficha h1 { font-size: clamp(2.2rem, 6vw, 3.6rem); margin: 0; letter-spacing: -.035em; }
+.ficha__titulo {
+  font-family: var(--font-ui);
+  font-size: .95rem;
+  color: hsl(var(--acento, var(--primary)));
+  margin: 6px 0 0;
+  font-weight: 600;
+}
+
+/* Dados em linhas rotuladas, como um formulário arquivado */
+.ficha__dados { margin: 0 0 44px; }
+.ficha__linha {
+  display: grid;
+  grid-template-columns: 190px 1fr;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid hsl(var(--border));
+}
+.ficha__linha dt {
+  font-family: var(--font-ui);
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: hsl(var(--muted-foreground));
+  padding-top: 2px;
+}
+.ficha__linha dd { margin: 0; }
+@media (max-width: 620px) {
+  .ficha__linha { grid-template-columns: 1fr; gap: 4px; }
+}
+
+.proxima {
+  display: flex; flex-direction: column; gap: 2px;
+  margin-top: 40px;
+  padding: 22px;
   border: 1px solid hsl(var(--border));
+  border-left: 3px solid hsl(var(--acento, var(--primary)));
   border-radius: var(--radius);
   background: hsl(var(--card));
   transition: var(--anima);
 }
-.momento::before {
-  content: '';
-  position: absolute; left: -28px; top: 26px;
-  width: 12px; height: 12px;
-  border-radius: 50%;
-  border: 2px solid hsl(var(--background));
-  background: hsl(var(--acento, var(--primary)));
-  box-shadow: 0 0 0 2px hsl(var(--acento, var(--primary)) / .35);
-}
-.momento:hover { box-shadow: var(--sombra-2); }
-.momento__topo { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
-.momento__topo h3 { margin: 0; }
-.momento__data {
-  font-family: var(--font-ui);
-  color: hsl(var(--muted-foreground));
-  font-size: .75rem;
-  margin-bottom: 10px;
-}
-.momento__relato { margin: 0 0 14px; color: hsl(var(--muted-foreground)); }
-.momento__pessoas { display: flex; gap: 6px; flex-wrap: wrap; }
+.proxima:hover { background: hsl(var(--acento, var(--primary)) / .07); transform: translateX(4px); }
+.proxima strong { font-family: var(--font-display); font-size: 1.3rem; }
 
-/* Tipos de momento usam a paleta categórica do DS */
-.tipo-lenda     { --acento: var(--chart-3); }
-.tipo-tragedia  { --acento: var(--chart-6); }
-.tipo-vitoria   { --acento: var(--chart-1); }
-.tipo-misterio  { --acento: var(--chart-2); }
-.tipo-caos      { --acento: var(--chart-5); }
+/* ============ Ranking do Hall da Fama ============ */
+.ranking { list-style: none; margin: 0; padding: 0; border-top: 1px solid hsl(var(--border)); }
+
+.ranking__linha {
+  display: grid;
+  grid-template-columns: 42px auto minmax(0, 1.1fr) minmax(0, 1.4fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 8px;
+  border-bottom: 1px solid hsl(var(--border));
+}
+.ranking__linha--zero { opacity: .5; }
+.ranking__pos {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 800;
+  text-align: center;
+  color: hsl(var(--muted-foreground));
+}
+.ranking__nome { display: flex; flex-direction: column; min-width: 0; color: inherit; }
+.ranking__nome strong { font-family: var(--font-display); font-size: 1.05rem; line-height: 1.2; }
+.ranking__nome small { font-family: var(--font-ui); font-size: .74rem; color: hsl(var(--muted-foreground)); }
+.ranking__nome:hover strong { color: hsl(var(--acento, var(--primary))); }
+
+.ranking__barra {
+  height: 10px;
+  border-radius: 999px;
+  background: hsl(var(--muted));
+  overflow: hidden;
+}
+.ranking__barra span {
+  display: block; height: 100%;
+  border-radius: 999px;
+  background: hsl(var(--acento, var(--primary)));
+  transition: width .6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.ranking__conta {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: hsl(var(--acento, var(--primary)));
+  min-width: 32px;
+  text-align: right;
+}
+
+@media (max-width: 700px) {
+  .ranking__linha { grid-template-columns: 34px auto 1fr auto; gap: 10px; }
+  .ranking__barra { display: none; }
+}
+
+/* ============ Galeria em visão infinita ============
+   A caixa recorta; o plano dentro dela é maior que a tela e se move no
+   arraste, repetindo a malha por módulo. */
+.inf {
+  position: relative;
+  height: min(72vh, 680px);
+  margin-bottom: 14px;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  background: hsl(var(--muted) / .4);
+  overflow: hidden;
+  cursor: grab;
+  touch-action: none;   /* o arraste é nosso, não da rolagem da página */
+  overscroll-behavior: contain;
+}
+.inf--arrastando { cursor: grabbing; }
+
+.inf__plano {
+  position: absolute;
+  top: 0; left: 0;
+  display: grid;
+  grid-template-columns: repeat(3, max-content);
+  will-change: transform;
+}
+.inf__malha {
+  display: grid;
+  grid-template-columns: repeat(3, 210px);
+  grid-auto-rows: 210px;
+  gap: 10px;
+  padding: 5px;
+}
+.inf__item {
+  padding: 0;
+  border: 1px solid hsl(var(--border));
+  border-radius: calc(var(--radius) - 2px);
+  background: hsl(var(--card));
+  overflow: hidden;
+  cursor: inherit;
+  transition: border-color var(--transicao), box-shadow var(--transicao);
+}
+.inf__item:hover { border-color: hsl(var(--ring)); box-shadow: var(--sombra-2); }
+.inf__item img,
+.inf__item video { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+.inf__item .foto__ausente { padding: 10px; font-size: .64rem; }
+.inf__item .foto__ausente span { font-size: 1.6rem; }
+.inf__item .foto__ausente code,
+.inf__item .foto__ausente a { display: none; }
+.inf__item .foto__play { right: 8px; bottom: 8px; width: 28px; height: 28px; font-size: .7rem; }
+
+.inf__dica {
+  position: absolute;
+  left: 50%; bottom: 14px;
+  transform: translateX(-50%);
+  margin: 0;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: hsl(var(--background) / .9);
+  border: 1px solid hsl(var(--border));
+  font-family: var(--font-ui);
+  font-size: .72rem;
+  color: hsl(var(--muted-foreground));
+  pointer-events: none;
+  backdrop-filter: blur(6px);
+}
+
+@media (max-width: 620px) {
+  .inf { height: 62vh; }
+  .inf__malha { grid-template-columns: repeat(3, 150px); grid-auto-rows: 150px; }
+}
+
+/* Link em forma de botão, para o texto de acessibilidade da galeria */
+.ligacao {
+  border: 0; background: none; padding: 0;
+  color: hsl(var(--primary-emphasis));
+  font: inherit;
+  text-decoration: underline;
+}
 
 /* Hall da Fama */
 .grade-premios {

@@ -13,8 +13,8 @@
 
   // Estado de busca/filtro de cada página (não recarrega o site)
   var estado = {
-    frases: { busca: '', autor: '' },
-    galeria: { busca: '' }
+    acervo: { busca: '' },
+    galeria: { modo: 'infinita' }
   };
 
   /* ---------------- Tema ----------------
@@ -116,7 +116,6 @@
     var slotContagem = document.querySelector('[data-slot="contagem"]');
     if (slotContagem) {
       var total = (window.ACERVO.frases || []).length +
-                  (window.ACERVO.momentos || []).length +
                   (window.ACERVO.galeria || []).length +
                   (window.ACERVO.premios || []).length;
       slotContagem.textContent = u.plural(total, 'registro no acervo', 'registros no acervo');
@@ -150,13 +149,17 @@
     var partes = rota.split('/').filter(Boolean); // '/time/joao' -> ['time','joao']
     var html;
 
+    // Endereços antigos continuam funcionando: quem tiver um link salvo de
+    // #/frases ou #/time/alguem cai no lugar novo em vez de num 404.
+    if (partes[0] === 'frases') { irPara('/acervo'); return; }
+    if (partes[0] === 'time' && partes[1]) { irPara('/acervo/' + partes[1]); return; }
+
     switch (partes[0]) {
       case undefined:      html = views.home(); break;
-      case 'frases':       html = views.frases(estado.frases); break;
+      case 'acervo':       html = partes[1] ? views.pasta(partes[1]) : views.acervo(estado.acervo); break;
       case 'galeria':      html = views.galeria(estado.galeria); break;
-      case 'momentos':     html = views.momentos(); break;
       case 'hall':         html = views.hall(); break;
-      case 'time':         html = partes[1] ? views.perfil(partes[1]) : views.time(); break;
+      case 'time':         html = views.time(); break;
       case 'como-contribuir': html = views.comoContribuir(); break;
       default:             html = views.naoEncontrada();
     }
@@ -224,39 +227,27 @@
 
   /* ---------------- Eventos das páginas ---------------- */
   function ligarEventosDaPagina() {
-    // Busca de frases
-    var buscaFrases = document.getElementById('busca-frases');
-    if (buscaFrases) {
-      buscaFrases.addEventListener('input', function () {
-        estado.frases.busca = this.value;
+    // Busca do acervo
+    var buscaAcervo = document.getElementById('busca-acervo');
+    if (buscaAcervo) {
+      buscaAcervo.addEventListener('input', function () {
+        estado.acervo.busca = this.value;
         var posicao = this.selectionStart;
         renderizar();
-        var novo = document.getElementById('busca-frases');
+        var novo = document.getElementById('busca-acervo');
         if (novo) { novo.focus(); novo.setSelectionRange(posicao, posicao); }
       });
     }
 
-    // Filtro por pessoa
-    var chips = document.querySelectorAll('[data-filtro-autor]');
-    Array.prototype.forEach.call(chips, function (chip) {
-      chip.addEventListener('click', function () {
-        var id = this.getAttribute('data-filtro-autor');
-        estado.frases.autor = (estado.frases.autor === id) ? '' : id;
+    // Alternar entre visão infinita e grade
+    Array.prototype.forEach.call(document.querySelectorAll('[data-acao="modo-galeria"]'), function (b) {
+      b.addEventListener('click', function () {
+        estado.galeria.modo = estado.galeria.modo === 'grade' ? 'infinita' : 'grade';
         renderizar();
       });
     });
 
-    // Busca da galeria
-    var buscaGaleria = document.getElementById('busca-galeria');
-    if (buscaGaleria) {
-      buscaGaleria.addEventListener('input', function () {
-        estado.galeria.busca = this.value;
-        var posicao = this.selectionStart;
-        renderizar();
-        var novo = document.getElementById('busca-galeria');
-        if (novo) { novo.focus(); novo.setSelectionRange(posicao, posicao); }
-      });
-    }
+    iniciarVisaoInfinita();
 
     // Abrir foto no lightbox
     var fotos = document.querySelectorAll('[data-foto]');
@@ -353,6 +344,97 @@
         ligarEventosDaPagina();
       });
     }
+  }
+
+  /* ---------------- Galeria em visão infinita ----------------
+     O plano tem 3x3 cópias da mesma malha. Arrastar move o plano; quando o
+     deslocamento passa do tamanho de uma malha, ele volta por módulo — o
+     conteúdo emenda e a exploração não tem fim nem borda.
+
+     Só o bloco do meio é alcançável por leitor de tela e teclado; as cópias
+     ficam com aria-hidden. Quem navega por teclado usa o botão "ver em
+     grade", que mostra a mesma coleção em lista normal. */
+  function iniciarVisaoInfinita() {
+    var caixa = document.getElementById('inf');
+    var plano = document.getElementById('inf-plano');
+    if (!caixa || !plano) return;
+
+    var malhas = plano.querySelectorAll('.inf__malha');
+    if (!malhas.length) return;
+
+    var x = 0, y = 0, larguraMalha = 0, alturaMalha = 0;
+    var arrastando = false, moveu = 0, px = 0, py = 0;
+
+    function medir() {
+      var m = malhas[0].getBoundingClientRect();
+      larguraMalha = m.width;
+      alturaMalha = m.height;
+      // Começa deslocado uma malha, para haver conteúdo nos quatro sentidos
+      if (!x && !y) { x = -larguraMalha; y = -alturaMalha; }
+      posicionar();
+    }
+
+    function posicionar() {
+      if (larguraMalha) {
+        // Mantém o deslocamento sempre dentro de uma malha
+        x = ((x % larguraMalha) + larguraMalha) % larguraMalha - larguraMalha;
+        y = ((y % alturaMalha) + alturaMalha) % alturaMalha - alturaMalha;
+      }
+      plano.style.transform = 'translate3d(' + x + 'px,' + y + 'px,0)';
+    }
+
+    caixa.addEventListener('pointerdown', function (ev) {
+      arrastando = true; moveu = 0;
+      px = ev.clientX; py = ev.clientY;
+      caixa.setPointerCapture(ev.pointerId);
+      caixa.classList.add('inf--arrastando');
+    });
+
+    caixa.addEventListener('pointermove', function (ev) {
+      if (!arrastando) return;
+      var dx = ev.clientX - px, dy = ev.clientY - py;
+      px = ev.clientX; py = ev.clientY;
+      moveu += Math.abs(dx) + Math.abs(dy);
+      x += dx; y += dy;
+      posicionar();
+    });
+
+    var soltar = function (ev) {
+      if (!arrastando) return;
+      arrastando = false;
+      caixa.classList.remove('inf--arrastando');
+      if (ev.pointerId !== undefined && caixa.hasPointerCapture &&
+          caixa.hasPointerCapture(ev.pointerId)) {
+        caixa.releasePointerCapture(ev.pointerId);
+      }
+    };
+
+    // O clique é resolvido aqui, e não por um listener em cada item: com o
+    // ponteiro capturado pela caixa, o evento 'click' nasce na caixa e nunca
+    // chega ao botão de baixo. Soltamos a captura e perguntamos ao documento
+    // qual item está sob o ponteiro.
+    caixa.addEventListener('pointerup', function (ev) {
+      var foiArraste = moveu > 8;
+      soltar(ev);
+      if (foiArraste) return;
+
+      var alvo = document.elementFromPoint(ev.clientX, ev.clientY);
+      var item = alvo && alvo.closest ? alvo.closest('[data-foto]') : null;
+      if (item) abrirLightbox(parseInt(item.getAttribute('data-foto'), 10));
+    });
+    caixa.addEventListener('pointercancel', soltar);
+
+    // Roda do mouse e trackpad também percorrem o plano
+    caixa.addEventListener('wheel', function (ev) {
+      ev.preventDefault();
+      x -= ev.deltaX; y -= ev.deltaY;
+      posicionar();
+    }, { passive: false });
+
+    if (document.readyState === 'complete') medir();
+    else window.addEventListener('load', medir, { once: true });
+    medir();
+    window.addEventListener('resize', medir);
   }
 
   /* ---------------- Lightbox ---------------- */

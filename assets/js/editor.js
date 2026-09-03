@@ -7,16 +7,17 @@
    fluxo é:
 
      1. você edita aqui e vê o resultado na hora;
-     2. o rascunho fica salvo no SEU navegador (ninguém mais vê);
-     3. "Publicar no GitHub" commita os arquivos alterados direto pela API,
+     2. "Publicar no GitHub" commita os arquivos alterados direto pela API,
         num único commit, usando um token que você fornece;
-     4. o GitHub Pages reconstrói o site e o time passa a ver a alteração.
+     3. o GitHub Pages reconstrói o site e o time passa a ver a alteração.
+
+   Não existe rascunho salvo no navegador: a alteração vive só na aba aberta.
+   Ou vira commit, ou não aconteceu — assim ninguém fica com uma versão
+   particular do acervo achando que o time está vendo o mesmo. Recarregar ou
+   fechar com alteração pendente dispara o aviso do navegador.
 
    Sem token dá para seguir pelo caminho manual: "Baixar" ou "Copiar" entrega
    o data/<arquivo>.js pronto para commitar na mão.
-
-   O rascunho some sozinho quando o site publicado alcança o que está aqui —
-   comparamos o que veio dos arquivos com o rascunho a cada carregamento.
 
    A senha (data/config.js) tranca o painel contra edição acidental. Ela não
    é segurança: o código roda no navegador e o repositório é público. O token
@@ -30,7 +31,6 @@ window.ACERVO.editor = (function () {
 
   var u = window.ACERVO.utils;
 
-  var CHAVE_RASCUNHO = 'acervo:rascunho';
   var CHAVE_SESSAO = 'acervo:editor-liberado';
 
   /* ---------------------------------------------------------------------
@@ -53,26 +53,6 @@ window.ACERVO.editor = (function () {
         { nome: 'data', rotulo: 'Data', tipo: 'data' },
         { nome: 'tags', rotulo: 'Tags (separadas por vírgula)', tipo: 'lista' },
         { nome: 'nota', rotulo: 'Pimentas de absurdo (0 a 5)', tipo: 'numero', min: 0, max: 5 }
-      ]
-    },
-
-    momentos: {
-      rotulo: 'Momentos',
-      icone: '📅',
-      lista: true,
-      titulo: function (i) { return i.titulo || '(sem título)'; },
-      novo: function () {
-        return { titulo: '', data: hoje(), relato: '', envolvidos: [], tipo: 'caos', gravidade: 3, foto: '' };
-      },
-      campos: [
-        { nome: 'titulo', rotulo: 'Manchete do causo', tipo: 'texto' },
-        { nome: 'data', rotulo: 'Data', tipo: 'data' },
-        { nome: 'relato', rotulo: 'O que aconteceu', tipo: 'area' },
-        { nome: 'envolvidos', rotulo: 'Quem estava envolvido', tipo: 'pessoas' },
-        { nome: 'tipo', rotulo: 'Tipo', tipo: 'opcoes',
-          opcoes: ['lenda', 'tragedia', 'vitoria', 'misterio', 'caos'] },
-        { nome: 'gravidade', rotulo: 'Gravidade (0 a 5)', tipo: 'numero', min: 0, max: 5 },
-        { nome: 'foto', rotulo: 'Imagem (opcional)', tipo: 'texto' }
       ]
     },
 
@@ -149,7 +129,6 @@ window.ACERVO.editor = (function () {
   /* Cabeçalho que vai no topo de cada arquivo gerado */
   var CABECALHOS = {
     frases: 'FRASES ICÔNICAS — toda pérola dita no time.\n     Campos: texto, autor (id em data/time.js), contexto, data (AAAA-MM-DD),\n     tags, nota (1 a 5 pimentas de absurdo).',
-    momentos: 'MOMENTOS HISTÓRICOS — os causos da linha do tempo.\n     Campos: titulo, data, relato, envolvidos (ids), tipo (lenda | tragedia |\n     vitoria | misterio | caos), gravidade (1 a 5), foto.',
     galeria: 'GALERIA — fotos, prints e vídeos (mp4/webm).\n     Campos: src, legenda, aparecem (ids), data, tags, creditos.\n     Nomes de arquivo sem espaço, parêntese ou acento.',
     premios: 'HALL DA FAMA — troféus por mérito duvidoso.\n     Campos: titulo, emoji, descricao, ganhador (id), edicao, motivo.',
     time: 'INTEGRANTES DO TIME.\n     O "id" amarra a pessoa às frases, fotos, momentos e prêmios.\n     A cor de cada um sai da paleta do Design System pela posição nesta lista.',
@@ -159,84 +138,44 @@ window.ACERVO.editor = (function () {
   var estado = { aberto: false, liberado: false, colecao: 'frases', abertoItem: null };
   var painel = null;
 
-  // Retrato do que veio dos arquivos data/*.js, tirado antes de aplicar o
-  // rascunho. É a referência para saber o que mudou e o que publicar.
+  // Retrato do que veio dos arquivos data/*.js. É a referência para saber
+  // o que mudou nesta aba e, portanto, o que precisa ser publicado.
   var PUBLICADO = {};
   Object.keys(COLECOES).forEach(function (k) {
     PUBLICADO[k] = JSON.parse(JSON.stringify(window.ACERVO[k] || (COLECOES[k].lista ? [] : {})));
   });
 
   /* ---------------------------------------------------------------------
-     Rascunho local
+     Alterações pendentes
+
+     Vivem só em memória, nesta aba. Não gravamos rascunho no navegador de
+     propósito: ou a alteração vira commit, ou se perde ao recarregar. Sem
+     isso, alguém acabaria navegando numa versão particular do acervo
+     acreditando que o time vê a mesma coisa.
      --------------------------------------------------------------------- */
-  function lerRascunho() {
-    try {
-      return JSON.parse(localStorage.getItem(CHAVE_RASCUNHO) || '{}');
-    } catch (e) {
-      return {};
-    }
-  }
-
-  // Guardamos também o estado publicado (PUBLICADO), capturado antes de o
-  // rascunho ser aplicado, para saber quais coleções realmente mudaram.
-  function salvarRascunho() {
-    var r = lerRascunho();
-    Object.keys(COLECOES).forEach(function (k) {
-      if (JSON.stringify(window.ACERVO[k]) === JSON.stringify(PUBLICADO[k])) delete r[k];
-      else r[k] = window.ACERVO[k];
-    });
-    try {
-      if (Object.keys(r).length) localStorage.setItem(CHAVE_RASCUNHO, JSON.stringify(r));
-      else localStorage.removeItem(CHAVE_RASCUNHO);
-    } catch (e) { /* sem espaço ou modo anônimo: a edição vale só nesta aba */ }
-    marcarRascunho();
-  }
-
-  // Aplicado no carregamento, antes do primeiro desenho: quem editou e
-  // recarregou continua vendo o próprio rascunho.
-  //
-  // Antes de aplicar, descartamos as coleções em que o arquivo publicado já
-  // ficou igual ao rascunho. É o que faz o aviso de "não publicado" sumir
-  // sozinho quando o GitHub Pages termina de reconstruir, sem ninguém
-  // precisar limpar nada na mão.
-  function aplicarRascunho() {
-    var r = lerRascunho();
-    var mudou = false;
-
-    Object.keys(COLECOES).forEach(function (k) {
-      if (!r[k]) return;
-      if (JSON.stringify(window.ACERVO[k]) === JSON.stringify(r[k])) {
-        delete r[k];         // o publicado alcançou o rascunho
-        mudou = true;
-        return;
-      }
-      window.ACERVO[k] = r[k];
-    });
-
-    if (mudou) {
-      try {
-        if (Object.keys(r).length) localStorage.setItem(CHAVE_RASCUNHO, JSON.stringify(r));
-        else localStorage.removeItem(CHAVE_RASCUNHO);
-      } catch (e) { /* ignora */ }
-    }
-
-    return Object.keys(r).length > 0;
-  }
-
-  // Só as coleções que diferem do que está publicado precisam ir no commit.
   function colecoesAlteradas() {
-    var r = lerRascunho();
-    return Object.keys(COLECOES).filter(function (k) { return !!r[k]; });
+    return Object.keys(COLECOES).filter(function (k) {
+      return JSON.stringify(window.ACERVO[k]) !== JSON.stringify(PUBLICADO[k]);
+    });
   }
 
-  function descartarRascunho() {
-    try { localStorage.removeItem(CHAVE_RASCUNHO); } catch (e) { /* ignora */ }
-    location.reload();
+  function temAlteracao() {
+    return colecoesAlteradas().length > 0;
   }
 
-  function temRascunho() {
-    return Object.keys(lerRascunho()).length > 0;
+  function descartarAlteracoes() {
+    Object.keys(COLECOES).forEach(function (k) {
+      window.ACERVO[k] = JSON.parse(JSON.stringify(PUBLICADO[k]));
+    });
+    if (window.ACERVO.renderizar) window.ACERVO.renderizar();
   }
+
+  // O navegador avisa antes de a alteração se perder
+  window.addEventListener('beforeunload', function (ev) {
+    if (!temAlteracao()) return;
+    ev.preventDefault();
+    ev.returnValue = '';
+  });
 
   /* ---------------------------------------------------------------------
      Senha
@@ -576,9 +515,9 @@ window.ACERVO.editor = (function () {
 
     painel.querySelector('.ed-corpo').innerHTML =
       '<div class="ed-abas">' + abas + '</div>' +
-      '<p class="ed-rascunho" id="ed-rascunho"' + (temRascunho() ? '' : ' hidden') + '>' +
-        'Você tem alterações salvas só neste navegador. Elas <strong>não</strong> estão no ar ' +
-        'para o time até você commitar o arquivo gerado abaixo.</p>' +
+      '<p class="ed-rascunho" id="ed-rascunho"' + (temAlteracao() ? '' : ' hidden') + '>' +
+        'Alteração pendente, viva só nesta aba. Publique para o time ver — ' +
+        'recarregar a página <strong>descarta</strong> o que não foi publicado.</p>' +
       '<div class="ed-itens">' +
         itens.map(function (it, i) { return itemHtml(estado.colecao, it, i); }).join('') +
       '</div>' +
@@ -642,7 +581,7 @@ window.ACERVO.editor = (function () {
           '<button class="chip" type="button" data-acao="baixar">Baixar ' + estado.colecao + '.js</button>' +
           '<button class="chip" type="button" data-acao="copiar">Copiar conteúdo</button>' +
           '<button class="chip" type="button" data-acao="trocar-senha">Trocar senha</button>' +
-          '<button class="chip" type="button" data-acao="descartar">Descartar rascunho</button>' +
+          '<button class="chip" type="button" data-acao="descartar">Descartar alteração</button>' +
         '</div>' +
       '</div>';
   }
@@ -727,8 +666,9 @@ window.ACERVO.editor = (function () {
     acao('baixar', function () { baixar(estado.colecao); });
     acao('copiar', function (b) { copiar(estado.colecao, b); });
     acao('descartar', function () {
-      if (window.confirm('Descartar todas as alterações locais e voltar ao que está publicado?')) {
-        descartarRascunho();
+      if (window.confirm('Descartar as alterações não publicadas e voltar ao que está no ar?')) {
+        descartarAlteracoes();
+        desenhar();
       }
     });
     acao('salvar-token', function () {
@@ -760,9 +700,7 @@ window.ACERVO.editor = (function () {
                     '/commit/' + res.sha;
           andar('✅ <strong>Publicado.</strong> ' +
                 '<a href="' + url + '" target="_blank" rel="noopener">Ver o commit</a>. ' +
-                'O site leva cerca de um minuto para reconstruir — até lá você continua ' +
-                'vendo a sua versão, e o aviso de rascunho some sozinho quando o time ' +
-                'passar a ver o mesmo.', 'ok');
+                'O site leva cerca de um minuto para reconstruir.', 'ok');
           u.confete(['🚀', '✅', '🎉']);
         })
         .catch(function (e) {
@@ -785,17 +723,16 @@ window.ACERVO.editor = (function () {
   // Aplica as mudanças ao site. `manterFoco` evita redesenhar o painel
   // inteiro enquanto a pessoa passeia pelos campos.
   function aplicar(manterFoco) {
-    salvarRascunho();
     if (window.ACERVO.renderizar) window.ACERVO.renderizar();
     if (!manterFoco) desenhar();
-    else marcarRascunho();
+    else marcarAlteracao();
   }
 
   // Tudo que depende de "existe alteração não publicada" é atualizado aqui,
   // sem redesenhar o painel — senão o estado só mudaria ao trocar de aba, e
   // quem editasse um campo veria o botão Publicar seguir desabilitado.
-  function marcarRascunho() {
-    var tem = temRascunho();
+  function marcarAlteracao() {
+    var tem = temAlteracao();
 
     var botao = document.getElementById('editor-botao');
     if (botao) botao.classList.toggle('tem-rascunho', tem);
@@ -863,11 +800,8 @@ window.ACERVO.editor = (function () {
       if (ev.key === 'Escape' && estado.aberto) fechar();
     });
 
-    marcarRascunho();
+    marcarAlteracao();
   }
 
-  // Roda na hora do carregamento, antes do primeiro desenho da página.
-  aplicarRascunho();
-
-  return { iniciar: iniciar, abrir: abrir, fechar: fechar, temRascunho: temRascunho };
+  return { iniciar: iniciar, abrir: abrir, fechar: fechar, temAlteracao: temAlteracao };
 })();
