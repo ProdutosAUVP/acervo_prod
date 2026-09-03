@@ -134,8 +134,41 @@ window.ACERVO.views = (function () {
 
   /* --- Home ---------------------------------------------------------- */
 
+  // Cabeçalho numerado, no espírito de índice/catálogo: o número ancora a
+  // seção e dá ritmo à página conforme se rola.
+  function tituloSecao(num, titulo, extra) {
+    return '<div class="secao__topo">' +
+      '<div class="secao__id">' +
+        '<span class="secao__num">' + num + '</span>' +
+        '<h2>' + u.esc(titulo) + '</h2>' +
+      '</div>' +
+      (extra || '') +
+    '</div>';
+  }
+
+  // Letreiro rolante com as frases. Duplicamos a lista para a volta emendar
+  // sem salto; se houver pouca frase, repetimos até encher a tela.
+  function letreiro() {
+    var d = dados();
+    if (!d.frases.length) return '';
+
+    var itens = d.frases.slice();
+    while (itens.length < 6) itens = itens.concat(d.frases);
+
+    var conteudo = itens.map(function (f) {
+      var p = u.pessoa(f.autor);
+      return '<span class="letreiro__item">' +
+               '<span class="letreiro__frase">“' + u.esc(f.texto) + '”</span>' +
+               '<span class="letreiro__autor">' + u.esc(p.nome.split(' ')[0]) + '</span>' +
+             '</span>';
+    }).join('');
+
+    return '<div class="letreiro" aria-hidden="true">' +
+             '<div class="letreiro__trilho">' + conteudo + conteudo + '</div>' +
+           '</div>';
+  }
+
   // Quiz "Quem disse isso?": mostra uma frase sem o autor e três chutes.
-  // Só aparece se houver material suficiente para a brincadeira ter graça.
   function quiz(indiceFrase) {
     var d = dados();
     if (d.frases.length < 1 || d.time.length < 3) return '';
@@ -143,7 +176,6 @@ window.ACERVO.views = (function () {
     var f = d.frases[indiceFrase % d.frases.length];
     var certo = u.pessoa(f.autor);
 
-    // Dois palpites errados, sorteados entre o resto do time
     var outros = d.time.filter(function (p) { return p.id !== certo.id; });
     for (var i = outros.length - 1; i > 0; i--) {
       var k = Math.floor(Math.random() * (i + 1));
@@ -156,11 +188,9 @@ window.ACERVO.views = (function () {
     }
 
     return '' +
-      '<section class="secao quiz" id="quiz" data-frase="' + (indiceFrase % d.frases.length) + '">' +
-        '<div class="secao__topo">' +
-          '<h2>Quem disse isso?</h2>' +
-          '<button class="chip" data-acao="outro-quiz">outra rodada</button>' +
-        '</div>' +
+      '<section class="secao revelar quiz" id="quiz" data-frase="' + (indiceFrase % d.frases.length) + '">' +
+        tituloSecao('03', 'Quem disse isso?',
+          '<button class="chip" data-acao="outro-quiz">outra rodada</button>') +
         '<div class="quiz__caixa">' +
           '<p class="quiz__frase">“' + u.esc(f.texto) + '”</p>' +
           '<div class="quiz__opcoes">' +
@@ -179,52 +209,65 @@ window.ACERVO.views = (function () {
     var d = dados();
     var frasesOrdenadas = u.ordenarPorData(d.frases);
     var destaque = u.doDia(frasesOrdenadas);
-    var ultimasFrases = frasesOrdenadas.slice(0, 2);
+    var ultimasFrases = frasesOrdenadas.slice(0, 3);
     var ultimosMomentos = u.ordenarPorData(d.momentos).slice(0, 2);
-    var fotos = u.ordenarPorData(d.galeria).slice(0, 6);
+    var fotos = u.ordenarPorData(d.galeria).slice(0, 5);
     var img = d.config.destaque || {};
 
     var html = '' +
-      '<section class="hero' + (img.src ? ' hero--com-foto' : '') + '">' +
-        '<div class="hero__texto">' +
-          '<h1>Bem-vindo ao <em>acervo</em>.</h1>' +
-          '<p>Tudo que foi dito, feito e fotografado por este time está guardado aqui. ' +
-          'Não existe apagar. Existe só arquivar melhor.</p>' +
-          '<div class="hero__acoes">' +
+      // Abertura: tipografia grande à esquerda, foto deslocada à direita
+      '<section class="abertura' + (img.src ? ' abertura--com-foto' : '') + '">' +
+        '<div class="abertura__texto">' +
+          '<span class="abertura__etiqueta">Arquivo público · desde 2026</span>' +
+          '<h1>Tudo que <em>foi dito</em>,<br>feito e fotografado.</h1>' +
+          '<p>O museu não oficial do time de produtos. Não existe apagar. ' +
+          'Existe só arquivar melhor.</p>' +
+          '<div class="abertura__acoes">' +
             '<a class="botao" href="#/frases">Ver as pérolas</a>' +
             '<button class="botao botao--fantasma" data-acao="sortear">🎲 Me surpreenda</button>' +
           '</div>' +
         '</div>' +
         (img.src
-          ? '<figure class="hero__foto">' +
+          ? '<figure class="abertura__foto">' +
               '<img src="' + u.esc(img.src) + '" alt="' + u.esc(img.legenda || '') + '" ' +
               'data-fallback="📸">' +
+              '<span class="abertura__selo">o time<br>inteiro</span>' +
               (img.legenda ? '<figcaption>' + u.esc(img.legenda) + '</figcaption>' : '') +
             '</figure>'
           : '') +
       '</section>' +
 
-      '<section class="placar">' +
-        '<a class="placar__item" href="#/frases"><div class="placar__numero">' + d.frases.length + '</div>' +
-          '<div class="placar__rotulo">frases arquivadas</div></a>' +
-        '<a class="placar__item" href="#/momentos"><div class="placar__numero">' + d.momentos.length + '</div>' +
-          '<div class="placar__rotulo">momentos históricos</div></a>' +
-        '<a class="placar__item" href="#/galeria"><div class="placar__numero">' + d.galeria.length + '</div>' +
-          '<div class="placar__rotulo">evidências visuais</div></a>' +
-        '<a class="placar__item" href="#/hall"><div class="placar__numero">' + d.premios.length + '</div>' +
-          '<div class="placar__rotulo">troféus entregues</div></a>' +
-        '<a class="placar__item" href="#/time"><div class="placar__numero">' + d.time.length + '</div>' +
-          '<div class="placar__rotulo">suspeitos</div></a>' +
-      '</section>' +
+      letreiro() +
 
-      quiz(Math.floor(Math.random() * Math.max(1, d.frases.length)));
+      // Placar em bento: o primeiro número domina, o resto se acomoda
+      '<section class="secao revelar">' +
+        tituloSecao('01', 'O acervo em números') +
+        '<div class="bento">' +
+          '<a class="bento__item bento__item--grande" href="#/frases">' +
+            '<div class="bento__numero">' + d.frases.length + '</div>' +
+            '<div class="bento__rotulo">frases arquivadas</div>' +
+            '<span class="bento__seta" aria-hidden="true">→</span></a>' +
+          '<a class="bento__item" href="#/galeria">' +
+            '<div class="bento__numero">' + d.galeria.length + '</div>' +
+            '<div class="bento__rotulo">evidências</div></a>' +
+          '<a class="bento__item" href="#/momentos">' +
+            '<div class="bento__numero">' + d.momentos.length + '</div>' +
+            '<div class="bento__rotulo">momentos</div></a>' +
+          '<a class="bento__item" href="#/hall">' +
+            '<div class="bento__numero">' + d.premios.length + '</div>' +
+            '<div class="bento__rotulo">troféus</div></a>' +
+          '<a class="bento__item" href="#/time">' +
+            '<div class="bento__numero">' + d.time.length + '</div>' +
+            '<div class="bento__rotulo">suspeitos</div></a>' +
+        '</div>' +
+      '</section>';
 
     if (destaque) {
       var pd = u.pessoa(destaque.autor);
       html +=
-        '<section class="secao">' +
-          '<div class="secao__topo"><h2>A frase do dia</h2>' +
-            '<button class="chip" data-acao="outra-frase">quero outra</button></div>' +
+        '<section class="secao revelar">' +
+          tituloSecao('02', 'A frase do dia',
+            '<button class="chip" data-acao="outra-frase">quero outra</button>') +
           '<div class="frase-dia ' + u.acento(pd) + '" id="frase-dia">' +
             '<blockquote>“' + u.esc(destaque.texto) + '”</blockquote>' +
             '<footer>' + u.avatar(pd) + '<strong>' + u.esc(pd.nome) + '</strong>' +
@@ -233,16 +276,18 @@ window.ACERVO.views = (function () {
         '</section>';
     }
 
+    html += quiz(Math.floor(Math.random() * Math.max(1, d.frases.length)));
+
     if (fotos.length) {
-      // Guarda a lista para o lightbox abrir a foto certa daqui mesmo
       window.ACERVO._galeriaAtual = fotos;
       html +=
-        '<section class="secao">' +
-          '<div class="secao__topo"><h2>Provas materiais</h2><a href="#/galeria">ver a galeria →</a></div>' +
-          '<div class="faixa">' +
+        '<section class="secao revelar">' +
+          tituloSecao('04', 'Provas materiais', '<a href="#/galeria">ver a galeria →</a>') +
+          '<div class="mosaico">' +
             fotos.map(function (item, i) {
-              return '<button class="faixa__item" type="button" data-foto="' + i + '">' +
+              return '<button class="mosaico__item" type="button" data-foto="' + i + '">' +
                        midiaDaGaleria(item) +
+                       '<span class="mosaico__legenda">' + u.esc(item.legenda || '') + '</span>' +
                      '</button>';
             }).join('') +
           '</div>' +
@@ -250,15 +295,15 @@ window.ACERVO.views = (function () {
     }
 
     html +=
-      '<section class="secao">' +
-        '<div class="secao__topo"><h2>Últimas pérolas</h2><a href="#/frases">ver todas →</a></div>' +
+      '<section class="secao revelar">' +
+        tituloSecao('05', 'Últimas pérolas', '<a href="#/frases">ver todas →</a>') +
         (ultimasFrases.length
           ? '<div class="grade-frases">' + ultimasFrases.map(cardFrase).join('') + '</div>'
           : u.vazio('Nenhuma frase ainda.', 'Abra o modo edição (✏️) e registre a primeira.')) +
       '</section>' +
 
-      '<section class="secao">' +
-        '<div class="secao__topo"><h2>Acontecimentos recentes</h2><a href="#/momentos">linha do tempo →</a></div>' +
+      '<section class="secao revelar">' +
+        tituloSecao('06', 'Acontecimentos', '<a href="#/momentos">linha do tempo →</a>') +
         (ultimosMomentos.length
           ? '<div class="linha-tempo">' + ultimosMomentos.map(cardMomento).join('') + '</div>'
           : u.vazio('A história ainda não começou.', 'Registre o primeiro causo no modo edição (✏️).')) +
@@ -531,6 +576,7 @@ window.ACERVO.views = (function () {
     naoEncontrada: naoEncontrada,
     midiaDaGaleria: midiaDaGaleria,
     quiz: quiz,
+    tituloSecao: tituloSecao,
     cardFrase: cardFrase
   };
 })();

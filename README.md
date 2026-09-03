@@ -31,6 +31,19 @@ O design system é a base, não uma camisa de força: onde o acervo se afasta
 dele (o easter egg, o confete, as pimentas de absurdo), há um comentário no
 CSS explicando por quê.
 
+### Layout da home
+
+A home segue o formato de site de índice/catálogo: tipografia grande na
+abertura, malha assimétrica em vez de fileiras iguais de cards, seções
+numeradas (01, 02, 03…), letreiro rolante com as frases e blocos de tamanhos
+diferentes. As peças novas são `.abertura`, `.letreiro`, `.bento` e
+`.mosaico`, todas comentadas no CSS.
+
+O conteúdo entra conforme se rola. A classe que esconde as seções antes da
+hora (`.pode-revelar`) só é aplicada pelo JavaScript: se o script falhar, a
+página aparece inteira em vez de ficar em branco. Com `prefers-reduced-motion`
+o letreiro para e tudo já nasce visível.
+
 ### Tema
 
 O site abre no **tema do seu computador**. O ícone no topo alterna entre
@@ -116,7 +129,7 @@ A verificação usa a Web Crypto, que o navegador só libera em `https` ou
 
 | Seção | Endereço | O que vai lá |
 |---|---|---|
-| Início | `#/` | Foto em destaque, placar, quiz "Quem disse isso?", frase do dia, faixa de fotos e os últimos registros |
+| Início | `#/` | Abertura editorial, letreiro de frases, placar em bento, frase do dia, quiz, mosaico de fotos e últimos registros |
 | Frases | `#/frases` | Todas as pérolas, com busca e filtro por pessoa |
 | Galeria | `#/galeria` | Fotos, prints e vídeos, com lightbox |
 | Momentos | `#/momentos` | Linha do tempo dos causos históricos |

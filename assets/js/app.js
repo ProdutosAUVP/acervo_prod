@@ -169,6 +169,7 @@
     marcarNavegacaoAtiva(partes[0]);
     u.tratarImagens(app);
     ligarEventosDaPagina();
+    revelarAoRolar();
   }
 
   // O modo edição chama isto para o site refletir a alteração na hora.
@@ -186,6 +187,39 @@
 
   function irPara(rota) {
     window.location.hash = rota;
+  }
+
+  /* ---------------- Revelação ao rolar ----------------
+     As seções entram conforme aparecem na tela. A classe que as esconde é
+     posta aqui, no JS: se o script falhar ou não rodar, a página fica
+     visível do jeito normal em vez de ficar em branco. */
+  var observador = null;
+
+  function revelarAoRolar() {
+    var alvos = app.querySelectorAll('.revelar');
+    if (!alvos.length) return;
+
+    var semMovimento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (semMovimento || !('IntersectionObserver' in window)) {
+      Array.prototype.forEach.call(alvos, function (el) { el.classList.add('revelado'); });
+      return;
+    }
+
+    document.documentElement.classList.add('pode-revelar');
+    if (observador) observador.disconnect();
+
+    observador = new IntersectionObserver(function (entradas) {
+      entradas.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        e.target.classList.add('revelado');
+        observador.unobserve(e.target);
+      });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
+
+    Array.prototype.forEach.call(alvos, function (el) {
+      el.classList.remove('revelado');
+      observador.observe(el);
+    });
   }
 
   /* ---------------- Eventos das páginas ---------------- */
